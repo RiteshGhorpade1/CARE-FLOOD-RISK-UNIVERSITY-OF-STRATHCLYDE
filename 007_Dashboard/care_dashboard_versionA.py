@@ -10,6 +10,16 @@ no narrative sentence, no ranked feature bars, no per-feature definitions.
 The selected-location panel shows only the risk badge, confidence
 percentage, coordinates, compass indicator, and the raw feature table —
 matching what care_dashboard_step3.py showed, styled the same as Version B.
+
+The panel also carries five compact st.metric "more about this location"
+cards below the badge/confidence/compass block: elevation framed against
+the citywide distribution, this point's risk class as a % share of all
+7,843 points, live distance to the nearest SEPA PVA zone (geopandas,
+computed on the fly against the same 7-zone Glasgow subset used for the
+flood_risk label), and two cards computed from the loaded feature matrix
+(data-vintage note; winter vs. annual rainfall). Identical to Version B's
+Overview tab addition, kept here too since it's general location context,
+not SHAP-dependent.
 """
 
 import math
@@ -21,8 +31,10 @@ import numpy as np
 import joblib
 import folium
 import requests
+import geopandas as gpd
 from streamlit_folium import st_folium
 from pyproj import Transformer
+from shapely.geometry import Point
 
 st.set_page_config(page_title="CARE Dashboard", layout="wide")
 
@@ -45,6 +57,7 @@ st.markdown(
 
 DATA_PATH = "/Users/riteshghorpade/Documents/010_Project/002_Dataset/feature_matrix_40yr.csv"
 MODEL_PATH = "/Users/riteshghorpade/Documents/010_Project/002_Dataset/rf_model_40yr.joblib"
+SEPA_PVA_PATH = "/Users/riteshghorpade/Documents/010_Project/002_Dataset/001_SEPA/GeoPackage/Data/PVAv2.gpkg"
 POSTCODES_API = "https://api.postcodes.io/postcodes/"
 OUTCODES_API = "https://api.postcodes.io/outcodes"
 
@@ -96,6 +109,10 @@ def nearest_clyde_point(easting, northing):
     i = dist.argmin()
     return _CLYDE_X[i], _CLYDE_Y[i]
 
+def nearest_point(df, easting, northing):
+    dist_sq = (df["easting"] - easting) ** 2 + (df["northing"] - northing) ** 2
+    return df.loc[dist_sq.idxmin()].copy()
+
 # Real, documented historical flood events — fixed reference points, not model
 # output. Coordinates geocoded from OpenStreetMap (Nominatim) place lookups
 # for "Greenfield, Glasgow" and "SEC Centre, Glasgow" and converted to
@@ -128,6 +145,26 @@ HISTORICAL_EVENTS = [
     },
 ]
 
+# Well-known Glasgow landmarks for the "jump to a landmark" browser and
+# comparison chart — recognisable place names as an alternative to postcode
+# search/districts. Coordinates geocoded via OpenStreetMap Nominatim (place
+# name + ", Glasgow, UK", first result) and converted from EPSG:4326 to
+# EPSG:27700 with pyproj, the same pipeline used for CLYDE_REF_POINTS and
+# HISTORICAL_EVENTS above. Ibrox and Partick sit ~5.5km from the study
+# centre, just outside the 5km grid radius — their nearest grid point is
+# flagged as an edge-of-area approximation in the browse UI below.
+LANDMARKS = [
+    {"name": "George Square", "easting": 259264, "northing": 665398},
+    {"name": "Kelvingrove Park", "easting": 256974, "northing": 666375},
+    {"name": "Merchant City", "easting": 259501, "northing": 665164},
+    {"name": "Glasgow Cathedral", "easting": 260247, "northing": 665573},
+    {"name": "SEC (Scottish Event Campus)", "easting": 256897, "northing": 665427},
+    {"name": "Glasgow Green", "easting": 260204, "northing": 663871},
+    {"name": "Buchanan Street", "easting": 259069, "northing": 665544},
+    {"name": "Ibrox", "easting": 255537, "northing": 664627},
+    {"name": "Partick", "easting": 255641, "northing": 666668},
+]
+
 # Rainfall trend context: mean-annual-rainfall and wet-day-frequency for the
 # first vs. second half of the 39-year HadUK-Grid record, averaged across all
 # 7,843 grid points. Precomputed offline from the full daily series
@@ -139,6 +176,26 @@ RAINFALL_TREND = {
                  "annual_total_mm": 1069, "wet_days_per_year": 172.5},
     "period_b": {"label": "2006-2025", "n_years": 20,
                  "annual_total_mm": 1088, "wet_days_per_year": 169.8},
+}
+
+# 2026 year-to-date rainfall: Jan-Jul 2026 (Met Office's provisional,
+# near-real-time HadUK-Grid feed — 002_Dataset/007_Rainfall_2026_Provisional/,
+# distinct from the finalized CEDA v1.3.2.ceda archive the 1987-2025 data
+# above comes from) against the SAME Jan-Jul calendar window in each prior
+# year, not full annual figures, so a 7-month partial year is never compared
+# against 12-month ones. The 1987-2025 baseline excludes 2020, whose source
+# archive is missing all of July 2020 (a pre-existing gap, unrelated to the
+# 2026 extraction) — 38 of 39 years contribute. Precomputed offline from
+# rainfall_daily_2026_ytd.parquet and rainfall_daily_1987_2025.parquet
+# (003_Code/archive/08_rainfall_extraction_2026_ytd.py), averaged across all
+# 7,843 grid points, WET_THRESHOLD_MM=1.0 matching 02_EDA.ipynb.
+RAINFALL_YTD_2026 = {
+    "label": "2026 YTD (Jan-Jul)",
+    "total_mm": 458.3,
+    "wet_days": 99.1,
+    "hist_avg_total_mm": 559.3,
+    "hist_avg_wet_days": 94.5,
+    "hist_n_years": 38,
 }
 
 # Risk-tiered precautions, based on official SEPA and Ready Scotland (gov.scot)
@@ -232,6 +289,27 @@ df["postcode_district"] = assign_postcode_district(df, postcode_districts_df)
 RISK_COLOURS = {0: "#639922", 1: "#EF9F27", 2: "#E24B4A"}
 RISK_LABELS = {0: "Low risk", 1: "Medium risk", 2: "High risk"}
 
+@st.cache_data
+def load_pva_zones(path, centre_x, centre_y, radius=5000):
+    """SEPA Potentially Vulnerable Area zones intersecting the study circle —
+    same source and filter as 03_Feature_Engineering.ipynb's flood-risk label
+    (Section 3.2.2/3.3.4), loaded independently here since PVA *geometry*
+    isn't itself in the feature matrix, only PVA *membership* (baked into
+    flood_risk) is."""
+    pva = gpd.read_file(path)
+    centre = Point(centre_x, centre_y)
+    return pva[pva.geometry.intersects(centre.buffer(radius))].copy()
+
+pva_zones = load_pva_zones(SEPA_PVA_PATH, UNI_X, UNI_Y)
+
+def nearest_pva_zone(easting, northing):
+    """Distance (0 if inside) and name of the nearest SEPA PVA zone. Only 7
+    zones survive the study-circle filter above, so an exact per-click
+    shapely distance is effectively instant — no precomputation needed."""
+    dists = pva_zones.geometry.distance(Point(easting, northing))
+    idx = dists.idxmin()
+    return float(dists.loc[idx]), str(pva_zones.loc[idx, "PVA_Name"])
+
 with st.sidebar:
     st.subheader("Risk distribution")
     st.caption(f"All {len(df):,} grid points (model prediction)")
@@ -258,16 +336,17 @@ with st.sidebar:
     st.subheader("Rainfall trend")
     st.caption("39-year HadUK-Grid record, averaged across all grid points")
 
-    def _trend_bars(label, val_a, val_b, unit, fmt="{:.0f}"):
-        max_val = max(val_a, val_b)
-        st.markdown(f"<div style='font-size:13px; margin-bottom:3px;'>{label}</div>", unsafe_allow_html=True)
-        for period, val, colour in [("a", val_a, "#7FB3C8"), ("b", val_b, "#2C6E8E")]:
+    def _trend_bars(title, bars, unit, fmt="{:.0f}"):
+        # bars: list of (label, value, colour) — generalised from the original
+        # fixed pair so the 2026 YTD row below can reuse it too.
+        max_val = max(val for _, val, _ in bars)
+        st.markdown(f"<div style='font-size:13px; margin-bottom:3px;'>{title}</div>", unsafe_allow_html=True)
+        for label, val, colour in bars:
             pct = val / max_val * 100
-            period_label = RAINFALL_TREND[f"period_{period}"]["label"]
             st.markdown(
                 f"""
                 <div style='display:flex; align-items:center; margin-bottom:3px; font-size:12px;'>
-                  <span style='width:64px; color:#666;'>{period_label}</span>
+                  <span style='width:64px; color:#666;'>{label}</span>
                   <div style='flex:1; background:#eee; border-radius:4px; height:8px; margin-right:6px;'>
                     <div style='background:{colour}; border-radius:4px; height:8px; width:{pct:.1f}%;'></div>
                   </div>
@@ -279,8 +358,16 @@ with st.sidebar:
 
     _a = RAINFALL_TREND["period_a"]
     _b = RAINFALL_TREND["period_b"]
-    _trend_bars("Mean annual rainfall", _a["annual_total_mm"], _b["annual_total_mm"], "mm")
-    _trend_bars("Wet days per year", _a["wet_days_per_year"], _b["wet_days_per_year"], "", fmt="{:.1f}")
+    _trend_bars(
+        "Mean annual rainfall",
+        [(_a["label"], _a["annual_total_mm"], "#7FB3C8"), (_b["label"], _b["annual_total_mm"], "#2C6E8E")],
+        "mm",
+    )
+    _trend_bars(
+        "Wet days per year",
+        [(_a["label"], _a["wet_days_per_year"], "#7FB3C8"), (_b["label"], _b["wet_days_per_year"], "#2C6E8E")],
+        "", fmt="{:.1f}",
+    )
 
     _pct_change = (_b["annual_total_mm"] - _a["annual_total_mm"]) / _a["annual_total_mm"] * 100
     st.caption(
@@ -288,6 +375,26 @@ with st.sidebar:
         f"annual totals up ~{_pct_change:.0f}%, but wet-day frequency and peak "
         "daily rainfall are both slightly down. This 39-year, single-city record "
         "does not show a clear directional trend."
+    )
+
+    # 2026 year-to-date — a separate comparison, deliberately not scaled
+    # against the full-year bars above: it's Jan-Jul 2026 against the SAME
+    # Jan-Jul window averaged across the 38 comparable prior years (see
+    # RAINFALL_YTD_2026), so a 7-month partial year is never held up next to
+    # 12-month figures.
+    _ytd = RAINFALL_YTD_2026
+    _trend_bars(
+        f"{_ytd['label']} rainfall",
+        [("Hist. avg", _ytd["hist_avg_total_mm"], "#7FB3C8"), ("2026", _ytd["total_mm"], "#2C6E8E")],
+        "mm",
+    )
+    _ytd_pct = (_ytd["total_mm"] - _ytd["hist_avg_total_mm"]) / _ytd["hist_avg_total_mm"] * 100
+    st.caption(
+        f"2026 is running ~{abs(_ytd_pct):.0f}% drier than the {_ytd['hist_n_years']}-year "
+        f"Jan-Jul average so far ({_ytd['total_mm']:.1f}mm vs {_ytd['hist_avg_total_mm']:.1f}mm), "
+        f"but with more frequent, lighter rainfall days than typical ({_ytd['wet_days']:.1f} vs "
+        f"{_ytd['hist_avg_wet_days']:.1f} wet days). Provisional Met Office data, not yet part "
+        "of the finalized archive."
     )
 
 for key, default in [
@@ -298,12 +405,18 @@ for key, default in [
     ("search_marker", None),
     ("map_center", DEFAULT_CENTER),
     ("map_zoom", DEFAULT_ZOOM),
+    ("last_browsed_district", None),
+    ("last_browsed_landmark", None),
 ]:
     if key not in st.session_state:
         st.session_state[key] = default
 
 # --- Postcode search ---
 st.markdown("#### Search by postcode")
+st.caption(
+    "Try a full postcode like **G1 1XQ** (University of Strathclyde) or "
+    "**G4 0BA** — or browse by postcode district below."
+)
 with st.form("postcode_search", clear_on_submit=False):
     search_col, button_col = st.columns([4, 1])
     with search_col:
@@ -312,6 +425,52 @@ with st.form("postcode_search", clear_on_submit=False):
         )
     with button_col:
         submitted = st.form_submit_button("Search", use_container_width=True, type="primary")
+
+browse_options = ["Browse by postcode district..."] + sorted(postcode_districts_df["outcode"].tolist())
+browsed_district = st.selectbox(
+    "Or browse by postcode district", browse_options, label_visibility="collapsed"
+)
+if browsed_district != "Browse by postcode district..." and browsed_district != st.session_state.last_browsed_district:
+    st.session_state.last_browsed_district = browsed_district
+    district_row = postcode_districts_df.loc[postcode_districts_df["outcode"] == browsed_district].iloc[0]
+    nearest = nearest_point(df, district_row["easting"], district_row["northing"])
+    st.session_state.selected_point = nearest
+    st.session_state.map_center = [nearest["lat"], nearest["lon"]]
+    st.session_state.map_zoom = 15
+    st.session_state.search_marker = {
+        "lat": nearest["lat"], "lon": nearest["lon"],
+        "postcode": f"{browsed_district} district",
+    }
+    st.session_state.search_error = None
+    st.session_state.search_warning = None
+
+landmark_options = ["Or jump to a landmark..."] + [lm["name"] for lm in LANDMARKS]
+browsed_landmark = st.selectbox(
+    "Or jump to a landmark", landmark_options, label_visibility="collapsed"
+)
+if browsed_landmark != "Or jump to a landmark..." and browsed_landmark != st.session_state.last_browsed_landmark:
+    st.session_state.last_browsed_landmark = browsed_landmark
+    landmark = next(lm for lm in LANDMARKS if lm["name"] == browsed_landmark)
+    nearest = nearest_point(df, landmark["easting"], landmark["northing"])
+    snap_dist = (
+        (nearest["easting"] - landmark["easting"]) ** 2
+        + (nearest["northing"] - landmark["northing"]) ** 2
+    ) ** 0.5
+    st.session_state.selected_point = nearest
+    st.session_state.map_center = [nearest["lat"], nearest["lon"]]
+    st.session_state.map_zoom = 16
+    st.session_state.search_marker = {
+        "lat": nearest["lat"], "lon": nearest["lon"],
+        "postcode": browsed_landmark,
+    }
+    st.session_state.search_error = None
+    if snap_dist > 300:
+        st.session_state.search_warning = (
+            f"'{browsed_landmark}' is near the edge of the study area — showing the "
+            f"nearest available grid point, {snap_dist:.0f}m away."
+        )
+    else:
+        st.session_state.search_warning = None
 
 if submitted:
     postcode = postcode_input.strip()
@@ -412,7 +571,7 @@ with col_map:
             value=(elevation_min, elevation_max), step=1, format="%dm",
         )
         min_confidence_pct = st.slider(
-            "Minimum model confidence", min_value=0, max_value=100, value=0, step=1, format="%d%%",
+            "Minimum classification confidence", min_value=0, max_value=100, value=0, step=1, format="%d%%",
         )
         building_range = st.slider(
             "Buildings within 250m", min_value=0, max_value=building_max,
@@ -489,7 +648,7 @@ with col_map:
             popup=folium.Popup(popup_html, max_width=280),
         ).add_to(m)
 
-    map_data = st_folium(m, width=700, height=500)
+    map_data = st_folium(m, height=500, use_container_width=True)
     st.caption(
         "🔺 Purple markers are real, documented historical flood events (1994, 2002) "
         "shown for context — they are not model predictions. Click a marker for details."
@@ -521,7 +680,7 @@ with col_panel:
 
         confidence = float(point["confidence"])
         st.markdown(
-            f"<span style='font-size:13px; color:#555;'>Model confidence: "
+            f"<span style='font-size:13px; color:#555;'>Confidence in this risk classification: "
             f"<b>{confidence * 100:.0f}%</b></span>",
             unsafe_allow_html=True,
         )
@@ -546,6 +705,59 @@ with col_panel:
 
         st.markdown(clyde_line)
         st.markdown(uni_line)
+
+        # --- Compact context cards: quick-glance facts to sit alongside the
+        # badge/confidence/compass above, without turning the panel into
+        # another scrollable section — five st.metric cards (two 2-up rows,
+        # one full-width) rather than prose. Mirrors care_dashboard_versionB.py
+        # for consistency between the two study variants.
+        st.markdown("---")
+        st.markdown("##### More about this location")
+
+        # st.metric's delta slot is deliberately unused below: it's
+        # single-line and truncates with an ellipsis, and delta_color="off"
+        # still renders a misleading up-arrow glyph on plain text. A
+        # regular st.caption() underneath wraps properly instead.
+        elev = float(point["elevation"])
+        elev_pct_lower = float((df["elevation"] < elev).mean() * 100)
+        if elev_pct_lower <= 33:
+            elev_context = "One of the lower-lying areas of the study zone."
+        elif elev_pct_lower >= 66:
+            elev_context = "Relatively high ground for this area."
+        else:
+            elev_context = "Close to the middle of the local elevation range."
+
+        risk_val = int(point["predicted_risk"])
+        risk_share_count = int(risk_counts[risk_val])
+        risk_share_pct = risk_share_count / total_points * 100
+
+        pva_dist, pva_zone_name = nearest_pva_zone(point["easting"], point["northing"])
+        pva_value = "Inside zone" if pva_dist < 1 else format_distance(pva_dist)
+
+        winter_avg = float(df["mean_winter_mm_day"].mean())
+        annual_avg = float(df["mean_annual_mm_day"].mean())
+
+        card_1a, card_1b = st.columns(2)
+        with card_1a:
+            st.metric("Elevation", f"{elev:.0f}m")
+            st.caption(elev_context)
+        with card_1b:
+            st.metric(f"{RISK_LABELS[risk_val]} citywide", f"{risk_share_pct:.1f}%")
+            st.caption(f"{risk_share_count:,} of {total_points:,} study points")
+
+        card_2a, card_2b = st.columns(2)
+        with card_2a:
+            st.metric("Nearest SEPA flood zone", pva_value)
+            st.caption(pva_zone_name)
+        with card_2b:
+            st.metric("Data basis", "1987–2025")
+            st.caption("39-yr rainfall climatology + current elevation/terrain data")
+
+        st.metric("Seasonal pattern", "Winter is wettest")
+        st.caption(
+            f"~{winter_avg:.2f}mm/day in winter vs ~{annual_avg:.2f}mm/day annual average, "
+            "across all study points"
+        )
 
         st.markdown("---")
         st.markdown("Feature values at this location")

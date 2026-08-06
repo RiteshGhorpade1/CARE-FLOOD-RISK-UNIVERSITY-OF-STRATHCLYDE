@@ -1,12 +1,15 @@
 """
-CARE Dashboard — Step 2
+CARE Dashboard — Step 1
 ------------------------
-Adds real click interaction: clicking a point on the map now updates the
-right-hand panel with that point's actual risk level, coordinates, and
-feature values. Still no SHAP explanation yet — that's Step 3.
+Basic risk map: loads feature_matrix_with_coords.csv, renders a folium map
+of a 1000-point sample colour-coded by the precomputed flood_risk label, and
+adds click interaction — clicking a point updates the right-hand panel with
+that point's risk level, coordinates, and feature values. No live model
+inference yet — that's Step 3 (see care_dashboard_step3.py). No SHAP
+explanation panel yet either.
 
 Run with:
-    python3 -m streamlit run care_dashboard_step2.py
+    python3 -m streamlit run care_dashboard_step1.py
 """
 
 import streamlit as st
@@ -42,8 +45,6 @@ df = add_latlon(df)
 RISK_COLOURS = {0: "#639922", 1: "#EF9F27", 2: "#E24B4A"}
 RISK_LABELS = {0: "Low risk", 1: "Medium risk", 2: "High risk"}
 
-# Fix: give the panel column a little top margin so its heading doesn't
-# visually collide with the map when the browser window is narrow.
 col_map, col_panel = st.columns([1.4, 1], gap="large")
 
 with col_map:
@@ -110,4 +111,4 @@ with col_panel:
             use_container_width=True,
         )
 
-        st.caption("SHAP explanation panel comes in Step 3.")
+        st.caption("Live model inference comes in Step 3; SHAP explanation panel after that.")
