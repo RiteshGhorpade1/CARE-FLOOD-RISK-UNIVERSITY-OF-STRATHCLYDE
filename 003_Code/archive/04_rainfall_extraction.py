@@ -1,7 +1,8 @@
 """
 Extract daily rainfall at the 7,843-point study grid from all HadUK-Grid NetCDF
-files spanning 1987-2025, combining 006_Rainfall_40yr/ (1987-2022) and
-003_NASA/hadukgrid_daily/ (2023-2025) into one continuous long-format table.
+files spanning 1987-2025, reading the merged raw/rainfall/ archive (originally
+two separate source batches, combined during the 002_Dataset/ raw-vs-processed
+reorganisation) into one continuous long-format table.
 
 Usage:
     python3 003_Code/04_rainfall_extraction.py --test   # 2 files only, sanity check
@@ -18,9 +19,8 @@ import pandas as pd
 from shapely.geometry import Point
 
 BASE = "/Users/riteshghorpade/Documents/010_Project/002_Dataset"
-FOLDER_1 = os.path.join(BASE, "006_Rainfall_40yr")
-FOLDER_2 = os.path.join(BASE, "003_NASA", "hadukgrid_daily")
-OUT_PATH = os.path.join(BASE, "rainfall_daily_1987_2025.parquet")
+FOLDER = os.path.join(BASE, "raw", "rainfall")
+OUT_PATH = os.path.join(BASE, "processed", "rainfall_daily_1987_2025.parquet")
 
 UNI_X, UNI_Y, RADIUS, GRID_SPACING = 260983, 665006, 5000, 100
 
@@ -43,11 +43,9 @@ def nearest_indices(coord_array, values):
 
 
 def get_file_list(test_mode):
-    files_1 = sorted(glob.glob(os.path.join(FOLDER_1, "*.nc")))
-    files_2 = sorted(glob.glob(os.path.join(FOLDER_2, "*.nc")))
+    all_files = sorted(glob.glob(os.path.join(FOLDER, "*.nc")))
     if test_mode:
-        return [files_1[0], files_2[0]]
-    all_files = sorted(files_1 + files_2)
+        return all_files[:2]
     return all_files
 
 

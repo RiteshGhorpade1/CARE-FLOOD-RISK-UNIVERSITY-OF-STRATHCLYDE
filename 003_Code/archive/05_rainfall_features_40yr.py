@@ -12,8 +12,8 @@ year doesn't dominate a 39-year climatology feature.
 import pandas as pd
 
 BASE = "/Users/riteshghorpade/Documents/010_Project/002_Dataset"
-IN_PATH = f"{BASE}/rainfall_daily_1987_2025.parquet"
-OUT_PATH = f"{BASE}/rainfall_features_40yr.csv"
+IN_PATH = f"{BASE}/processed/rainfall_daily_1987_2025.parquet"
+OUT_PATH = f"{BASE}/processed/rainfall_features_40yr.csv"
 
 WET_THRESHOLD_MM = 1.0
 

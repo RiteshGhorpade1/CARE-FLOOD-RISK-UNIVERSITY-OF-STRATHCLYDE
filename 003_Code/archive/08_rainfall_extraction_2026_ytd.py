@@ -1,6 +1,6 @@
 """
 Extract daily rainfall at the 7,843-point study grid from the 2026 provisional
-HadUK-Grid files (002_Dataset/007_Rainfall_2026_Provisional/, Jan-Jul 2026),
+HadUK-Grid files (002_Dataset/raw/rainfall_2026_provisional/, Jan-Jul 2026),
 same nearest-cell method as 04_rainfall_extraction.py used for 1987-2025.
 
 This is a year-to-date (YTD) comparison input only — see care_dashboard_*.py's
@@ -27,8 +27,8 @@ import pandas as pd
 from shapely.geometry import Point
 
 BASE = "/Users/riteshghorpade/Documents/010_Project/002_Dataset"
-FOLDER = os.path.join(BASE, "007_Rainfall_2026_Provisional")
-OUT_PATH = os.path.join(BASE, "rainfall_daily_2026_ytd.parquet")
+FOLDER = os.path.join(BASE, "raw", "rainfall_2026_provisional")
+OUT_PATH = os.path.join(BASE, "processed", "rainfall_daily_2026_ytd.parquet")
 
 UNI_X, UNI_Y, RADIUS, GRID_SPACING = 260983, 665006, 5000, 100
 

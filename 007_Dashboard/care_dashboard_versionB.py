@@ -259,9 +259,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-DATA_PATH = "/Users/riteshghorpade/Documents/010_Project/002_Dataset/feature_matrix_40yr.csv"
-MODEL_PATH = "/Users/riteshghorpade/Documents/010_Project/002_Dataset/rf_model_40yr.joblib"
-SEPA_PVA_PATH = "/Users/riteshghorpade/Documents/010_Project/002_Dataset/001_SEPA/GeoPackage/Data/PVAv2.gpkg"
+DATA_PATH = "/Users/riteshghorpade/Documents/010_Project/002_Dataset/processed/feature_matrix_40yr.csv"
+MODEL_PATH = "/Users/riteshghorpade/Documents/010_Project/002_Dataset/processed/rf_model_40yr.joblib"
+SEPA_PVA_PATH = "/Users/riteshghorpade/Documents/010_Project/002_Dataset/raw/sepa/PVAv2.gpkg"
 POSTCODES_API = "https://api.postcodes.io/postcodes/"
 OUTCODES_API = "https://api.postcodes.io/outcodes"
 
@@ -474,7 +474,7 @@ LANDMARKS = [
 # Rainfall trend context: mean-annual-rainfall and wet-day-frequency for the
 # first vs. second half of the 39-year HadUK-Grid record, averaged across all
 # 7,843 grid points. Precomputed offline from the full daily series
-# (002_Dataset/rainfall_daily_1987_2025.parquet, 111.5M daily observations)
+# (002_Dataset/processed/rainfall_daily_1987_2025.parquet, 111.5M daily observations)
 # rather than loaded at runtime, since the dashboard otherwise only reads the
 # small aggregated feature matrix. Reproducible via a groupby on grid_id/year.
 RAINFALL_TREND = {
@@ -485,7 +485,7 @@ RAINFALL_TREND = {
 }
 
 # 2026 year-to-date rainfall: Jan-Jul 2026 (Met Office's provisional,
-# near-real-time HadUK-Grid feed — 002_Dataset/007_Rainfall_2026_Provisional/,
+# near-real-time HadUK-Grid feed — 002_Dataset/raw/rainfall_2026_provisional/,
 # distinct from the finalized CEDA v1.3.2.ceda archive the 1987-2025 data
 # above comes from) against the SAME Jan-Jul calendar window in each prior
 # year, not full annual figures, so a 7-month partial year is never compared

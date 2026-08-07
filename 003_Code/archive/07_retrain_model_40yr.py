@@ -16,7 +16,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 BASE = "/Users/riteshghorpade/Documents/010_Project/002_Dataset"
-MODEL_PATH = f"{BASE}/rf_model_40yr.joblib"
+MODEL_PATH = f"{BASE}/processed/rf_model_40yr.joblib"
 
 FEATURE_COLS = ['elevation', 'dist_to_water', 'dist_to_clyde',
                 'building_count', 'road_count', 'mean_annual_mm_day',
@@ -80,8 +80,8 @@ def run_pipeline(csv_path, label):
     }
 
 
-orig = run_pipeline(f"{BASE}/feature_matrix.csv", "ORIGINAL (2023-2025 rainfall, 3yr)")
-new = run_pipeline(f"{BASE}/feature_matrix_40yr.csv", "NEW (1987-2025 rainfall, 39yr)")
+orig = run_pipeline(f"{BASE}/processed/feature_matrix.csv", "ORIGINAL (2023-2025 rainfall, 3yr)")
+new = run_pipeline(f"{BASE}/processed/feature_matrix_40yr.csv", "NEW (1987-2025 rainfall, 39yr)")
 
 joblib.dump(new["model"], MODEL_PATH)
 print(f"\nRetrained 40yr model saved to {MODEL_PATH}")

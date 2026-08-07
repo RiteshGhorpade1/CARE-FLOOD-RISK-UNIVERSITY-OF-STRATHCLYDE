@@ -24,11 +24,11 @@ OLD_RAIN_COLS = ['mean_annual_mm_day', 'mean_winter_mm_day',
 SHARED_NON_RAIN_COLS = ['elevation', 'dist_to_water', 'dist_to_clyde',
                           'building_count', 'road_count', 'flood_risk']
 
-df = pd.read_csv(f"{BASE}/feature_matrix.csv")
+df = pd.read_csv(f"{BASE}/processed/feature_matrix.csv")
 df["grid_id"] = df.index
 
-new_rain = pd.read_csv(f"{BASE}/rainfall_features_40yr.csv")
-coords = pd.read_csv(f"{BASE}/feature_matrix_with_coords.csv")
+new_rain = pd.read_csv(f"{BASE}/processed/rainfall_features_40yr.csv")
+coords = pd.read_csv(f"{BASE}/processed/feature_matrix_with_coords.csv")
 
 assert len(df) == len(coords), "row count mismatch vs feature_matrix_with_coords.csv"
 mismatches = (df[SHARED_NON_RAIN_COLS] != coords[SHARED_NON_RAIN_COLS]).any(axis=1).sum()
@@ -41,9 +41,9 @@ merged["easting"] = coords["easting"]
 merged["northing"] = coords["northing"]
 
 merged = merged[FEATURE_COLS + ["flood_risk", "easting", "northing"]]
-merged.to_csv(f"{BASE}/feature_matrix_40yr.csv", index=False)
+merged.to_csv(f"{BASE}/processed/feature_matrix_40yr.csv", index=False)
 
 print("Shape:", merged.shape)
 print("Nulls:", merged.isnull().sum().sum())
 print(merged.head(3))
-print(f"\nSaved to {BASE}/feature_matrix_40yr.csv")
+print(f"\nSaved to {BASE}/processed/feature_matrix_40yr.csv")

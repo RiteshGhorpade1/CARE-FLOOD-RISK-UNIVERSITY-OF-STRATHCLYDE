@@ -43,8 +43,8 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-DATA_PATH = "/Users/riteshghorpade/Documents/010_Project/002_Dataset/feature_matrix_40yr.csv"
-MODEL_PATH = "/Users/riteshghorpade/Documents/010_Project/002_Dataset/rf_model_40yr.joblib"
+DATA_PATH = "/Users/riteshghorpade/Documents/010_Project/002_Dataset/processed/feature_matrix_40yr.csv"
+MODEL_PATH = "/Users/riteshghorpade/Documents/010_Project/002_Dataset/processed/rf_model_40yr.joblib"
 POSTCODES_API = "https://api.postcodes.io/postcodes/"
 
 FEATURE_COLS = ["elevation", "dist_to_water", "dist_to_clyde", "building_count",
@@ -130,7 +130,7 @@ HISTORICAL_EVENTS = [
 # Rainfall trend context: mean-annual-rainfall and wet-day-frequency for the
 # first vs. second half of the 39-year HadUK-Grid record, averaged across all
 # 7,843 grid points. Precomputed offline from the full daily series
-# (002_Dataset/rainfall_daily_1987_2025.parquet, 111.5M daily observations)
+# (002_Dataset/processed/rainfall_daily_1987_2025.parquet, 111.5M daily observations)
 # rather than loaded at runtime, since the dashboard otherwise only reads the
 # small aggregated feature matrix. Reproducible via a groupby on grid_id/year.
 RAINFALL_TREND = {

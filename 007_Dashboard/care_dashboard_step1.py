@@ -23,7 +23,7 @@ st.set_page_config(page_title="CARE Dashboard", layout="wide")
 st.title("CARE Dashboard")
 st.caption("Climate awareness and risk evaluation — Glasgow flood risk")
 
-DATA_PATH = "/Users/riteshghorpade/Documents/010_Project/002_Dataset/feature_matrix_with_coords.csv"
+DATA_PATH = "/Users/riteshghorpade/Documents/010_Project/002_Dataset/processed/feature_matrix_with_coords.csv"
 
 @st.cache_data
 def load_data(path):
