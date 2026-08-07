@@ -11,7 +11,7 @@
 
 002_Dataset/001_SEPA        - SEPA flood boundary data
 002_Dataset/002_OSM         - OpenStreetMap buildings, roads, water
-002_Dataset/003_NASA        - NASA SRTM elevation + GPM rainfall
+002_Dataset/003_NASA        - NASA SRTM elevation + Met Office HadUK-Grid rainfall
 002_Dataset/004_Maps        - All map outputs and visualisations
 003_Code                    - All Python notebooks and scripts
 004_Ethics/001_Final        - Approved ethics documents

@@ -24,7 +24,7 @@ This chapter reports the results of the usability evaluation whose design was se
 
 ### 4.3.1 RQ1 — Model accuracy and predictors
 
-Briefly revisit the Section 3.4 findings (99.62% test accuracy, elevation and distance-to-Clyde as the dominant predictors) in light of the limitations already disclosed in Section 3.8 (label construction, spatial autocorrelation). *[Insert: any new perspective the usability sessions themselves indirectly offer on RQ1 — e.g., did participants trust or question the model's stated confidence, did any participant's local knowledge surface a case worth noting — otherwise keep this subsection short, since RQ1 is primarily a Chapter 3 result.]*
+Briefly revisit the Section 3.4 findings (99.62% test accuracy, 99.21% ± 0.36% spatial-block accuracy, elevation and distance-to-Clyde as the dominant predictors) in light of the limitations already disclosed in Section 3.8 (label construction, spatial autocorrelation). *[Insert: any new perspective the usability sessions themselves indirectly offer on RQ1 — e.g., did participants trust or question the model's stated confidence, did any participant's local knowledge surface a case worth noting — otherwise keep this subsection short, since RQ1 is primarily a Chapter 3 result. Consistency check: describe the model as reconstructing the engineered proxy label, not as validated flood prediction — see the language established in §1.4/§2.6/§3.4.3/§3.9.]*
 
 ### 4.3.2 RQ2 — Recommendation comprehensibility, applicability and relevance
 
@@ -48,7 +48,7 @@ Briefly revisit the Section 3.4 findings (99.62% test accuracy, elevation and di
 
 ## 5.1 Summary of Contribution
 
-*[Insert: restate the contribution from Section 1.4 in past tense — what was actually built and evaluated, not what was planned. Keep the same "systems and communication contribution, not ML novelty" framing already established, since Chapter 2's positioning (§2.6) and Chapter 4's results should now support it directly.]*
+*[Insert: restate the contribution from Section 1.4 in past tense — what was actually built and evaluated, not what was planned. Keep the same "systems and communication contribution, not ML novelty" framing already established, since Chapter 2's positioning (§2.6) and Chapter 4's results should now support it directly. Consistency check: use the corrected, non-overclaiming language established in §1.4, §2.6 and §3.9 — "an evaluated classifier reconstructing an engineered flood-risk proxy label", "evaluated using random and spatial-block cross-validation", "not independently validated against observed flood outcomes". Do not reintroduce "a validated classifier" / "a validated flood-risk classifier" / "validated by cross-validation" phrasing here.]*
 
 ## 5.2 Revisiting Research Objectives and Questions
 
