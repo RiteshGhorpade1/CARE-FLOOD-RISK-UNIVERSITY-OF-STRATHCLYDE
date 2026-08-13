@@ -1,7 +1,4 @@
-# Generated from the working environment (python3.9, pip freeze) on 2026-08-06.
-# 4 packages (altgraph, future, macholib, six) had Apple-internal local wheel
-# paths in the raw pip freeze output, replaced here with plain version pins
-# so this file installs cleanly on another machine.
+
 affine==2.4.0
 altair==5.5.0
 altgraph==0.17.2

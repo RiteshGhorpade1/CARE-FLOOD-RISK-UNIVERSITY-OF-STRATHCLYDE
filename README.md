@@ -1,11 +1,10 @@
 # CARE Dashboard
 ## Climate Awareness and Risk Evaluation Dashboard
 
-**Student:** Ritesh Raju Ghorpade (202559288)
+**Student:** Ritesh Raju Ghorpade 
 **Programme:** MSc Advanced Computer Science with Data Science
 **University:** University of Strathclyde, Glasgow
 **Supervisor:** Dr Daniel Thomas (d.thomas@strath.ac.uk)
-**Submission Deadline:** 17th August 2026, noon UK time
 
 CARE is a geospatial data science MSc dissertation project. It builds a
 Random Forest flood-risk classifier for a 5km radius around the University of
