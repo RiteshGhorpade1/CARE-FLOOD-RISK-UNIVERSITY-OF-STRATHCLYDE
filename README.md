@@ -4,7 +4,7 @@
 **Student:** Ritesh Raju Ghorpade 
 **Programme:** MSc Advanced Computer Science with Data Science
 **University:** University of Strathclyde, Glasgow
-**Supervisor:** Dr Daniel Thomas (d.thomas@strath.ac.uk)
+**Supervisor:** Dr Daniel Thomas 
 
 CARE is a geospatial data science MSc dissertation project. It builds a
 Random Forest flood-risk classifier for a 5km radius around the University of
@@ -13,9 +13,7 @@ explains individual predictions with SHAP, and serves both through a
 Streamlit dashboard.
 
 **Important limitation:** the model predicts/reconstructs an engineered
-flood-risk proxy label (SEPA flood-vulnerability zone membership combined
-with elevation), and has not been independently validated against observed
-real-world flood outcomes. Its outputs are research classifications, not an
+flood-risk. Its outputs are research classifications, not an
 official flood risk assessment — see the in-dashboard disclaimers and
 Chapter 4/6 of the dissertation for the full discussion.
 
@@ -158,20 +156,15 @@ the dissertation (Chapter 5) as approved by the study's ethics application.
 ## Repository structure
 
 ```
-001_Proposal_and_Feedback/ Original research proposal and marking feedback (dissertation admin)
-002_Dataset/          Raw and processed geospatial/tabular data (see 002_Dataset/raw/README.md)
+001_Dataset/          Raw and processed geospatial/tabular data (see 002_Dataset/raw/README.md)
   raw/                 Source data as obtained from SEPA / OSM / NASA / HadUK-Grid
   processed/           Derived feature matrices, trained model
   outputs/              Generated figures (build artefacts, not source)
   archive/              Superseded intermediate data from earlier reorganisations
-003_Code/              Pipeline notebooks (01-04) and dissertation figure scripts (05-07)
+002_Code/              Pipeline notebooks (01-04) and dissertation figure scripts (05-07)
   archive/               Superseded exploratory notebooks/scripts (provenance only)
-004_Ethics/             Ethics approval documents (templates only — see Privacy)
-005_Progress_Logs/      Submitted progress logs
-006_Dissertation/       Dissertation chapters, figures, appendix
-007_Dashboard/          Streamlit dashboards (versionA, versionB) and their build history
-008_Reference_Documents/ Reference material
-009_Project Report Structure/ Dissertation structure/style planning docs (admin, not source)
+003_Dashboard/          Streamlit dashboards (versionA, versionB) and their build history
+
 ```
 
 ## Environment
