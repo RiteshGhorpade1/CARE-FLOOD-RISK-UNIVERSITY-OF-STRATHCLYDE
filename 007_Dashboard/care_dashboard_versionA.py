@@ -3,13 +3,32 @@ Version A — the risk-only (no SHAP) variant of the CARE dashboard usability st
 
 This and care_dashboard_versionB.py are the two final study versions (not
 sequential build steps — see step1.py/step3.py for the build history that
-led here). Version A shares every feature with Version B (postcode search,
-compass indicator, risk histogram, historical flood markers, model
-confidence, rainfall trend, visual theme) but has no SHAP explanation panel:
-no narrative sentence, no ranked feature bars, no per-feature definitions.
-The selected-location panel shows only the risk badge, confidence
-percentage, coordinates, compass indicator, and the raw feature table —
-matching what care_dashboard_step3.py showed, styled the same as Version B.
+led here).
+
+Consistency rule (simplification pass): every feature is identical to
+care_dashboard_versionB.py except two things B has and A doesn't — the
+SHAP explanation layer, and the "Why am I seeing this result?" jump-to-tab
+button (there's nothing to jump to here, since A has no second tab).
+Concretely, A has no narrative sentence, no ranked SHAP bars, and no
+per-feature definitions; everything else (postcode search, privacy note,
+map click-to-inspect, risk badge, classification confidence, nearest SEPA
+flood zone, compass, "more about this location" cards, practical advice,
+grid-snapping caveat, disclaimer, "What should I do now?" panel, filters,
+Reset search and filters) matches B. The selected-location panel shows the
+risk badge, confidence percentage, coordinates, compass indicator, and the
+raw feature table.
+
+Search/browse: postcode search plus a single merged "browse a district or
+landmark" dropdown (collapsed from two separate dropdowns, since they
+competed with the primary postcode search for attention) and a "Reset
+search and filters" button (resets by bumping a filters_version counter
+baked into every filter/search widget's key, forcing Streamlit to revert
+them to their declared defaults — the reliable way to reset widgets that
+don't expose a direct "set value" API). Historical flood events (1994,
+2002) remain as passive markers on the map, but the dedicated "only show
+points near a historical event" filter was removed — the checkbox/radius
+slider added a filtering dimension most users didn't need alongside the
+other seven filters already available.
 
 The panel also carries five compact st.metric "more about this location"
 cards below the badge/confidence/compass block: elevation framed against
@@ -25,6 +44,8 @@ not SHAP-dependent.
 import math
 from urllib.parse import quote
 
+from care_paths import DATA_PATH, MODEL_PATH, SEPA_PVA_PATH, require
+
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -32,6 +53,7 @@ import joblib
 import folium
 import requests
 import geopandas as gpd
+import matplotlib.pyplot as plt
 from streamlit_folium import st_folium
 from pyproj import Transformer
 from shapely.geometry import Point
@@ -41,13 +63,20 @@ st.set_page_config(page_title="CARE Dashboard", layout="wide")
 st.markdown(
     """
     <style>
-        .block-container { padding-top: 2rem; padding-bottom: 2rem; }
-        hr { margin: 1.2rem 0; }
+        .block-container { padding-top: 1.4rem; padding-bottom: 1.4rem; }
+        hr { margin: 0.7rem 0; }
+        /* Strip Streamlit's default white image card so the risk donut
+           (already transparent-background) sits flush, not boxed. */
+        .st-key-risk_donut [data-testid="stImage"] {
+            background: transparent;
+            padding: 0;
+            border-radius: 0;
+        }
     </style>
     <div style='background: linear-gradient(135deg, #1E7A8C, #123E49);
-                padding: 22px 32px; border-radius: 10px; margin-bottom: 26px;'>
-        <h1 style='color: #FFFFFF; margin: 0; font-size: 2.1rem;'>CARE Dashboard</h1>
-        <p style='color: #CFE9EE; margin: 4px 0 0 0; font-size: 0.95rem;'>
+                padding: 16px 28px; border-radius: 10px; margin-bottom: 16px;'>
+        <h1 style='color: #FFFFFF; margin: 0; font-size: 1.8rem;'>CARE Dashboard</h1>
+        <p style='color: #CFE9EE; margin: 3px 0 0 0; font-size: 0.9rem;'>
             Climate Awareness and Risk Evaluation — Glasgow flood risk
         </p>
     </div>
@@ -55,9 +84,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-DATA_PATH = "/Users/riteshghorpade/Documents/010_Project/002_Dataset/processed/feature_matrix_40yr.csv"
-MODEL_PATH = "/Users/riteshghorpade/Documents/010_Project/002_Dataset/processed/rf_model_40yr.joblib"
-SEPA_PVA_PATH = "/Users/riteshghorpade/Documents/010_Project/002_Dataset/raw/sepa/PVAv2.gpkg"
+DATA_PATH = require(DATA_PATH, "feature matrix (feature_matrix_40yr.csv)")
+MODEL_PATH = require(MODEL_PATH, "trained Random Forest model (rf_model_40yr.joblib)")
+SEPA_PVA_PATH = require(SEPA_PVA_PATH, "SEPA PVA flood boundaries (PVAv2.gpkg)")
 POSTCODES_API = "https://api.postcodes.io/postcodes/"
 OUTCODES_API = "https://api.postcodes.io/outcodes"
 
@@ -115,11 +144,14 @@ def nearest_point(df, easting, northing):
 
 # Real, documented historical flood events — fixed reference points, not model
 # output. Coordinates geocoded from OpenStreetMap (Nominatim) place lookups
-# for "Greenfield, Glasgow" and "SEC Centre, Glasgow" and converted to
-# EPSG:27700. Facts cross-checked against Wikipedia's "2002 Glasgow floods"
-# article, independent reporting corroborating the Bloomberg SECC figures, and
-# the SEC's own official history page (sec.co.uk/about-the-sec/history-of-the-sec),
-# which is the primary source for the River Kelvin/railway tunnel detail.
+# for "Greenfield, Glasgow", "SEC Centre, Glasgow", "Glasgow Central Station"
+# and "Albert Bridge, Glasgow" (site of the 1795 Saltmarket bridge) and
+# converted to EPSG:27700. Facts cross-checked against Wikipedia's "2002
+# Glasgow floods", "Albert Bridge, Glasgow" and "1795 in Scotland" articles,
+# independent reporting corroborating the Bloomberg SECC figures, the SEC's
+# own official history page (sec.co.uk/about-the-sec/history-of-the-sec) for
+# the River Kelvin/railway tunnel detail, and GlasgowWorld/Railscot accounts
+# of the same 1994 tunnel flood reaching Glasgow Central Low Level.
 HISTORICAL_EVENTS = [
     {
         "name": "2002 Glasgow floods",
@@ -142,6 +174,30 @@ HISTORICAL_EVENTS = [
             "over £100 million in damage."
         ),
         "source": "Bloomberg / historical reporting; SEC official history (sec.co.uk)",
+    },
+    {
+        "name": "1994 Glasgow Central (Low Level) floods",
+        "easting": 258736, "northing": 665373,
+        "date": "12 December 1994",
+        "caption": (
+            "Same event as the SEC Centre flood: River Kelvin floodwater surged "
+            "through disused railway tunnels (Kelvingrove/Yorkhill) and reached "
+            "Glasgow Central's Low Level underground platforms, several miles "
+            "from the river itself."
+        ),
+        "source": "Bloomberg / Grokipedia reporting; GlasgowWorld and Railscot historical accounts",
+    },
+    {
+        "name": "1795 Saltmarket bridge flood",
+        "easting": 259413, "northing": 664441,
+        "date": "18 November 1795",
+        "caption": (
+            "The River Clyde, in spate, flooded the centre of Glasgow and brought "
+            "down the recently erected stone bridge at the foot of the Saltmarket "
+            "— two arches collapsed near noon, the remaining three that evening. "
+            "Marker placed at Albert Bridge, rebuilt on the same site in 1871."
+        ),
+        "source": "Wikipedia, \"1795 in Scotland\"",
     },
 ]
 
@@ -288,6 +344,11 @@ df["postcode_district"] = assign_postcode_district(df, postcode_districts_df)
 
 RISK_COLOURS = {0: "#639922", 1: "#EF9F27", 2: "#E24B4A"}
 RISK_LABELS = {0: "Low risk", 1: "Medium risk", 2: "High risk"}
+# Coloured dot matching RISK_COLOURS, prefixed onto the risk-level filter's
+# option/chip labels — st.multiselect has no per-option colour styling hook,
+# so this is the cleanest way to carry the green/amber/red convention into
+# that widget without fragile CSS targeting of its selected-tag DOM.
+RISK_SWATCH = {0: "🟢", 1: "🟡", 2: "🔴"}
 
 @st.cache_data
 def load_pva_zones(path, centre_x, centre_y, radius=5000):
@@ -310,29 +371,48 @@ def nearest_pva_zone(easting, northing):
     idx = dists.idxmin()
     return float(dists.loc[idx]), str(pva_zones.loc[idx, "PVA_Name"])
 
-with st.sidebar:
-    st.subheader("Risk distribution")
-    st.caption(f"All {len(df):,} grid points (model prediction)")
-    risk_counts = df["predicted_risk"].value_counts().reindex([0, 1, 2], fill_value=0)
-    total_points = risk_counts.sum()
-    for risk_val in [0, 1, 2]:
-        count = int(risk_counts[risk_val])
-        pct = count / total_points * 100
-        st.markdown(
-            f"""
-            <div style='margin-bottom:12px;'>
-              <div style='display:flex; justify-content:space-between; font-size:13px; margin-bottom:3px;'>
-                <span>{RISK_LABELS[risk_val]}</span><span>{count:,} ({pct:.1f}%)</span>
-              </div>
-              <div style='background:#eee; border-radius:4px; height:10px; width:100%;'>
-                <div style='background:{RISK_COLOURS[risk_val]}; border-radius:4px; height:10px; width:{pct:.2f}%;'></div>
-              </div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+risk_counts = df["predicted_risk"].value_counts().reindex([0, 1, 2], fill_value=0)
+total_points = int(risk_counts.sum())
 
-    st.markdown("---")
+def render_risk_donut(highlight_risk=None):
+    """Small citywide risk-mix donut (Low/Medium/High, existing risk
+    colours). When highlight_risk is set, that slice is exploded and
+    outlined, with a "Your area" callout, so the selected location's risk
+    class is visible against the citywide distribution at a glance — this
+    replaces the sidebar's old bar-chart version of the same data, which is
+    dropped so the mix isn't shown twice in two formats."""
+    sizes = [int(risk_counts.get(i, 0)) for i in [0, 1, 2]]
+    colours = [RISK_COLOURS[i] for i in [0, 1, 2]]
+    explode = [0.10 if highlight_risk == i else 0 for i in [0, 1, 2]]
+
+    fig, ax = plt.subplots(figsize=(1.8, 1.8))
+    fig.patch.set_alpha(0)
+    wedges, _texts, _autotexts = ax.pie(
+        sizes, colors=colours, explode=explode, startangle=90,
+        wedgeprops=dict(width=0.42, edgecolor="white", linewidth=1.3),
+        autopct="%1.0f%%", pctdistance=0.78,
+        textprops=dict(color="white", fontsize=7, fontweight="bold"),
+    )
+    if highlight_risk is not None:
+        hi = wedges[highlight_risk]
+        hi.set_linewidth(2.6)
+        hi.set_edgecolor(RISK_COLOURS[highlight_risk])
+        ang = np.radians((hi.theta1 + hi.theta2) / 2)
+        x, y = np.cos(ang), np.sin(ang)
+        ax.annotate(
+            "Your area",
+            xy=(x * 0.82, y * 0.82), xytext=(x * 1.5, y * 1.5),
+            ha="center", va="center", fontsize=7.5, fontweight="bold",
+            color=RISK_COLOURS[highlight_risk],
+            arrowprops=dict(arrowstyle="-", color=RISK_COLOURS[highlight_risk], lw=1.1),
+        )
+    ax.set_aspect("equal")
+    fig.tight_layout(pad=0.15)
+    with st.container(key="risk_donut"):
+        st.pyplot(fig, use_container_width=False)
+    plt.close(fig)
+
+with st.sidebar:
     st.subheader("Rainfall trend")
     st.caption("39-year HadUK-Grid record, averaged across all grid points")
 
@@ -405,72 +485,106 @@ for key, default in [
     ("search_marker", None),
     ("map_center", DEFAULT_CENTER),
     ("map_zoom", DEFAULT_ZOOM),
-    ("last_browsed_district", None),
-    ("last_browsed_landmark", None),
+    ("last_browsed_choice", None),
+    ("filters_version", 0),
 ]:
     if key not in st.session_state:
         st.session_state[key] = default
+
+def reset_search_and_filters():
+    """Clear the current selection/search and bump filters_version, which is
+    baked into every filter/search widget's key below — changing it forces
+    Streamlit to treat those widgets as brand new, reverting them to their
+    declared defaults (the reliable way to reset widgets that don't expose
+    a direct "set value" API)."""
+    st.session_state.selected_point = None
+    st.session_state.search_marker = None
+    st.session_state.search_error = None
+    st.session_state.search_warning = None
+    st.session_state.last_browsed_choice = None
+    st.session_state.last_clicked_latlng = None
+    st.session_state.map_center = DEFAULT_CENTER
+    st.session_state.map_zoom = DEFAULT_ZOOM
+    st.session_state.filters_version += 1
+
+_fv = st.session_state.filters_version
 
 # --- Postcode search ---
 st.markdown("#### Search by postcode")
 st.caption(
     "Try a full postcode like **G1 1XQ** (University of Strathclyde) or "
-    "**G4 0BA** — or browse by postcode district below."
+    "**G4 0BA** — or browse a district/landmark below."
+)
+st.caption(
+    "Your postcode is sent to postcodes.io (a free, third-party UK postcode "
+    "lookup service) only to find its coordinates for this search — it isn't "
+    "stored or logged by this dashboard."
 )
 with st.form("postcode_search", clear_on_submit=False):
-    search_col, button_col = st.columns([4, 1])
-    with search_col:
+    form_search_col, form_button_col = st.columns([4, 1])
+    with form_search_col:
         postcode_input = st.text_input(
-            "Postcode", placeholder="e.g. G1 1XQ", label_visibility="collapsed"
+            "Postcode", placeholder="e.g. G1 1XQ", label_visibility="collapsed",
+            key=f"postcode_input_{_fv}",
         )
-    with button_col:
+    with form_button_col:
         submitted = st.form_submit_button("Search", use_container_width=True, type="primary")
 
-browse_options = ["Browse by postcode district..."] + sorted(postcode_districts_df["outcode"].tolist())
-browsed_district = st.selectbox(
-    "Or browse by postcode district", browse_options, label_visibility="collapsed"
-)
-if browsed_district != "Browse by postcode district..." and browsed_district != st.session_state.last_browsed_district:
-    st.session_state.last_browsed_district = browsed_district
-    district_row = postcode_districts_df.loc[postcode_districts_df["outcode"] == browsed_district].iloc[0]
-    nearest = nearest_point(df, district_row["easting"], district_row["northing"])
-    st.session_state.selected_point = nearest
-    st.session_state.map_center = [nearest["lat"], nearest["lon"]]
-    st.session_state.map_zoom = 15
-    st.session_state.search_marker = {
-        "lat": nearest["lat"], "lon": nearest["lon"],
-        "postcode": f"{browsed_district} district",
-    }
-    st.session_state.search_error = None
-    st.session_state.search_warning = None
+# Districts and landmarks merged into one dropdown (rather than two competing
+# with the primary postcode search above) — each option is self-labelled with
+# its kind so the single list stays unambiguous.
+BROWSE_PLACEHOLDER = "Or browse a district or landmark..."
+browse_lookup = {}
+for _, _row in postcode_districts_df.sort_values("outcode").iterrows():
+    _label = f"{_row['outcode']} (postcode district)"
+    browse_lookup[_label] = {"kind": "district", "easting": _row["easting"], "northing": _row["northing"], "name": _row["outcode"]}
+for _lm in LANDMARKS:
+    _label = f"{_lm['name']} (landmark)"
+    browse_lookup[_label] = {"kind": "landmark", "easting": _lm["easting"], "northing": _lm["northing"], "name": _lm["name"]}
+browse_options = [BROWSE_PLACEHOLDER] + list(browse_lookup.keys())
 
-landmark_options = ["Or jump to a landmark..."] + [lm["name"] for lm in LANDMARKS]
-browsed_landmark = st.selectbox(
-    "Or jump to a landmark", landmark_options, label_visibility="collapsed"
-)
-if browsed_landmark != "Or jump to a landmark..." and browsed_landmark != st.session_state.last_browsed_landmark:
-    st.session_state.last_browsed_landmark = browsed_landmark
-    landmark = next(lm for lm in LANDMARKS if lm["name"] == browsed_landmark)
-    nearest = nearest_point(df, landmark["easting"], landmark["northing"])
-    snap_dist = (
-        (nearest["easting"] - landmark["easting"]) ** 2
-        + (nearest["northing"] - landmark["northing"]) ** 2
-    ) ** 0.5
+browse_col, reset_btn_col = st.columns([4, 1])
+with browse_col:
+    browsed_choice = st.selectbox(
+        "Or browse a district or landmark", browse_options, label_visibility="collapsed",
+        key=f"browse_choice_{_fv}",
+    )
+with reset_btn_col:
+    if st.button("Reset search and filters", use_container_width=True):
+        reset_search_and_filters()
+        st.rerun()
+
+if browsed_choice != BROWSE_PLACEHOLDER and browsed_choice != st.session_state.last_browsed_choice:
+    st.session_state.last_browsed_choice = browsed_choice
+    choice = browse_lookup[browsed_choice]
+    nearest = nearest_point(df, choice["easting"], choice["northing"])
     st.session_state.selected_point = nearest
     st.session_state.map_center = [nearest["lat"], nearest["lon"]]
-    st.session_state.map_zoom = 16
-    st.session_state.search_marker = {
-        "lat": nearest["lat"], "lon": nearest["lon"],
-        "postcode": browsed_landmark,
-    }
     st.session_state.search_error = None
-    if snap_dist > 300:
-        st.session_state.search_warning = (
-            f"'{browsed_landmark}' is near the edge of the study area — showing the "
-            f"nearest available grid point, {snap_dist:.0f}m away."
-        )
-    else:
+    if choice["kind"] == "district":
+        st.session_state.map_zoom = 15
+        st.session_state.search_marker = {
+            "lat": nearest["lat"], "lon": nearest["lon"],
+            "postcode": f"{choice['name']} district",
+        }
         st.session_state.search_warning = None
+    else:
+        st.session_state.map_zoom = 16
+        snap_dist = (
+            (nearest["easting"] - choice["easting"]) ** 2
+            + (nearest["northing"] - choice["northing"]) ** 2
+        ) ** 0.5
+        st.session_state.search_marker = {
+            "lat": nearest["lat"], "lon": nearest["lon"],
+            "postcode": choice["name"],
+        }
+        if snap_dist > 300:
+            st.session_state.search_warning = (
+                f"'{choice['name']}' is near the edge of the study area — showing the "
+                f"nearest available grid point, {snap_dist:.0f}m away."
+            )
+        else:
+            st.session_state.search_warning = None
 
 if submitted:
     postcode = postcode_input.strip()
@@ -527,6 +641,21 @@ if st.session_state.search_error:
 elif st.session_state.search_warning:
     st.warning(st.session_state.search_warning)
 
+st.markdown(
+    """
+    <div style='background:#EAF3F5; border-left: 4px solid #1E7A8C;
+                border-radius: 10px; padding: 10px 18px; margin-bottom: 14px;'>
+      <div style='font-weight:700; margin-bottom:5px; font-size:1.0rem;'>What should I do now?</div>
+      <ul style='margin:0; padding-left:20px; line-height:1.45;'>
+        <li>Check your exact address on SEPA's official flood maps (<a href="https://www.sepa.scot" target="_blank">sepa.scot</a>)</li>
+        <li>Sign up to Floodline for flood warnings: <b>0345 988 1188</b></li>
+        <li>Use CARE as contextual research information only — not an official flood risk assessment</li>
+      </ul>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
 col_map, col_panel = st.columns([1.4, 1], gap="large")
 
 with col_map:
@@ -536,7 +665,8 @@ with col_map:
         "Show risk levels",
         options=[0, 1, 2],
         default=[0, 1, 2],
-        format_func=lambda r: RISK_LABELS[r],
+        format_func=lambda r: f"{RISK_SWATCH[r]} {RISK_LABELS[r]}",
+        key=f"selected_risks_{_fv}",
     )
     clyde_dist_max = int(np.ceil(df["dist_to_clyde"].max() / 100) * 100)
     clyde_dist_range = st.slider(
@@ -546,10 +676,11 @@ with col_map:
         value=(0, clyde_dist_max),
         step=100,
         format="%dm",
+        key=f"clyde_dist_range_{_fv}",
     )
 
     district_options = ["All districts"] + sorted(postcode_districts_df["outcode"].tolist())
-    selected_district = st.selectbox("Postcode district", district_options)
+    selected_district = st.selectbox("Postcode district", district_options, key=f"selected_district_{_fv}")
 
     elevation_min = int(np.floor(df["elevation"].min()))
     elevation_max = int(np.ceil(df["elevation"].max()))
@@ -559,40 +690,36 @@ with col_map:
     wet_days_max = int(np.ceil(df["wet_days_per_year"].max()))
     max_daily_min = float(df["max_daily_mm"].min())
     max_daily_max = float(df["max_daily_mm"].max())
-    nearest_event_dist = pd.concat(
-        [np.sqrt((df["easting"] - ev["easting"]) ** 2 + (df["northing"] - ev["northing"]) ** 2)
-         for ev in HISTORICAL_EVENTS],
-        axis=1,
-    ).min(axis=1)
 
     with st.expander("More filters"):
         elevation_range = st.slider(
             "Elevation range", min_value=elevation_min, max_value=elevation_max,
             value=(elevation_min, elevation_max), step=1, format="%dm",
+            key=f"elevation_range_{_fv}",
         )
         min_confidence_pct = st.slider(
             "Minimum classification confidence", min_value=0, max_value=100, value=0, step=1, format="%d%%",
+            key=f"min_confidence_pct_{_fv}",
         )
         building_range = st.slider(
             "Buildings within 250m", min_value=0, max_value=building_max,
             value=(0, building_max), step=1,
+            key=f"building_range_{_fv}",
         )
         road_range = st.slider(
             "Roads within 250m", min_value=0, max_value=road_max,
             value=(0, road_max), step=1,
-        )
-        near_events_only = st.checkbox("Only show points near a historical flood event")
-        event_radius = st.slider(
-            "Radius around 1994/2002 flood events", min_value=100, max_value=3000,
-            value=500, step=100, format="%dm", disabled=not near_events_only,
+            key=f"road_range_{_fv}",
         )
         wet_days_range = st.slider(
             "Wet days per year", min_value=wet_days_min, max_value=wet_days_max,
             value=(wet_days_min, wet_days_max), step=1,
+            key=f"wet_days_range_{_fv}",
         )
         max_daily_range = st.slider(
             "Max daily rainfall", min_value=max_daily_min, max_value=max_daily_max,
             value=(max_daily_min, max_daily_max), step=0.5, format="%.1fmm",
+            key=f"max_daily_range_{_fv}",
         )
 
     mask = (
@@ -607,8 +734,6 @@ with col_map:
     )
     if selected_district != "All districts":
         mask &= df["postcode_district"] == selected_district
-    if near_events_only:
-        mask &= nearest_event_dist <= event_radius
 
     filtered_df = df[mask]
 
@@ -650,7 +775,7 @@ with col_map:
 
     map_data = st_folium(m, height=500, use_container_width=True)
     st.caption(
-        "🔺 Purple markers are real, documented historical flood events (1994, 2002) "
+        "Purple markers are real, documented historical flood events (1795, 1994, 2002) "
         "shown for context — they are not model predictions. Click a marker for details."
     )
 
@@ -663,12 +788,24 @@ if clicked is not None and clicked != st.session_state.last_clicked_latlng:
     st.session_state.search_marker = None
 
 with col_panel:
-    st.subheader("Selected location")
     point = st.session_state.selected_point
 
     if point is None:
+        st.subheader("Selected location")
         st.info("Click a point on the map, or search a postcode above, to see flood risk details here.")
+        donut_col, _spacer = st.columns([1, 2])
+        with donut_col:
+            st.caption("Citywide risk mix")
+            render_risk_donut(highlight_risk=None)
     else:
+        marker = st.session_state.search_marker
+        location_label = marker["postcode"] if marker else "map selection"
+        st.subheader(f"Result for {location_label} (nearest model grid point)")
+        st.caption(
+            "Results represent the nearest 100m grid point, not an exact "
+            "property-level assessment."
+        )
+
         risk_label = RISK_LABELS[point["predicted_risk"]]
         badge_colour = RISK_COLOURS[point["predicted_risk"]]
 
@@ -688,29 +825,34 @@ with col_panel:
 
         clyde_dist = point["dist_to_clyde"]
         if clyde_dist < 100:
-            clyde_line = "🧭 Right at the River Clyde"
+            clyde_line = "Right at the River Clyde"
         else:
             cx, cy = nearest_clyde_point(point["easting"], point["northing"])
             clyde_dir = compass_direction(point["easting"] - cx, point["northing"] - cy)
-            clyde_line = f"🧭 {format_distance(clyde_dist)} {clyde_dir} of the River Clyde"
+            clyde_line = f"{format_distance(clyde_dist)} {clyde_dir} of the River Clyde"
 
         uni_dx = point["easting"] - UNI_X
         uni_dy = point["northing"] - UNI_Y
         uni_dist = (uni_dx ** 2 + uni_dy ** 2) ** 0.5
         if uni_dist < 100:
-            uni_line = "🎓 Right at the University of Strathclyde"
+            uni_line = "Right at the University of Strathclyde"
         else:
             uni_dir = compass_direction(uni_dx, uni_dy)
-            uni_line = f"🎓 {format_distance(uni_dist)} {uni_dir} of the University of Strathclyde"
+            uni_line = f"{format_distance(uni_dist)} {uni_dir} of the University of Strathclyde"
 
-        st.markdown(clyde_line)
-        st.markdown(uni_line)
+        st.markdown(
+            f"<div style='font-size:14px; line-height:1.5; margin-top:2px;'>{clyde_line}<br>{uni_line}</div>",
+            unsafe_allow_html=True,
+        )
 
         # --- Compact context cards: quick-glance facts to sit alongside the
         # badge/confidence/compass above, without turning the panel into
-        # another scrollable section — five st.metric cards (two 2-up rows,
-        # one full-width) rather than prose. Mirrors care_dashboard_versionB.py
-        # for consistency between the two study variants.
+        # another scrollable section — four st.metric-style cards (two 2-up
+        # rows), the second row pairing the SEPA-zone card with the citywide
+        # risk donut so the freed space from the removed Data
+        # basis/Seasonal pattern cards stays inside the same compact grid.
+        # Mirrors care_dashboard_versionB.py for consistency between the two
+        # study variants.
         st.markdown("---")
         st.markdown("##### More about this location")
 
@@ -734,9 +876,6 @@ with col_panel:
         pva_dist, pva_zone_name = nearest_pva_zone(point["easting"], point["northing"])
         pva_value = "Inside zone" if pva_dist < 1 else format_distance(pva_dist)
 
-        winter_avg = float(df["mean_winter_mm_day"].mean())
-        annual_avg = float(df["mean_annual_mm_day"].mean())
-
         card_1a, card_1b = st.columns(2)
         with card_1a:
             st.metric("Elevation", f"{elev:.0f}m")
@@ -750,21 +889,23 @@ with col_panel:
             st.metric("Nearest SEPA flood zone", pva_value)
             st.caption(pva_zone_name)
         with card_2b:
-            st.metric("Data basis", "1987–2025")
-            st.caption("39-yr rainfall climatology + current elevation/terrain data")
+            st.caption("Citywide risk mix")
+            render_risk_donut(highlight_risk=risk_val)
 
-        st.metric("Seasonal pattern", "Winter is wettest")
-        st.caption(
-            f"~{winter_avg:.2f}mm/day in winter vs ~{annual_avg:.2f}mm/day annual average, "
-            "across all study points"
-        )
+# --- Feature values and precautions moved out of the narrow col_panel and
+# given the full page width below the map/summary row, so the page reads
+# top-to-bottom as Map -> Feature values -> Precautions, and precautions can
+# actually sit centred (there's no room to center anything meaningfully
+# inside col_panel's ~40%-width column).
+if point is not None:
+    st.markdown("---")
+    st.markdown("##### Feature values at this location")
+    feature_table = point[FEATURE_COLS].to_frame(name="value")
+    st.dataframe(feature_table, use_container_width=True)
 
-        st.markdown("---")
-        st.markdown("Feature values at this location")
-        feature_table = point[FEATURE_COLS].to_frame(name="value")
-        st.dataframe(feature_table, use_container_width=True)
-
-        st.markdown("---")
+    st.markdown("---")
+    pad_l, precautions_col, pad_r = st.columns([1, 3, 1])
+    with precautions_col:
         st.subheader("Precautions and next steps")
         precautions = PRECAUTIONS[point["predicted_risk"]]
         items_html = "".join(f"<li style='margin-bottom:6px;'>{item}</li>" for item in precautions["items"])
@@ -782,3 +923,12 @@ with col_panel:
             "general guidance, not a substitute for checking your specific "
             "address on SEPA's official flood maps."
         )
+
+st.markdown("---")
+st.caption(
+    "**CARE Dashboard** — MSc dissertation research prototype by Ritesh Raju "
+    "Ghorpade, supervised by Dr Daniel Thomas (Advanced Computer Science with "
+    "Data Science, University of Strathclyde). Data: SEPA PVA flood "
+    "boundaries, OpenStreetMap, NASA SRTM elevation, Met Office HadUK-Grid "
+    "rainfall (1987–2025)."
+)

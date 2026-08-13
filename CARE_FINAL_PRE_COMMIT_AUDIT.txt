@@ -1,0 +1,368 @@
+CARE REPOSITORY — FINAL PRE-COMMIT AUDIT
+Generated: 2026-08-10
+Branch: main (no new branch created)
+Remote: https://github.com/RiteshGhorpade1/Flood-Risk-Prediction-Glasgow.git
+STATUS: Everything below is STAGED ONLY. Nothing has been committed or
+pushed. The user must review and run `git commit` themselves.
+
+===================================================================
+1. FINAL REPOSITORY STRUCTURE (top-level, tracked after staging)
+===================================================================
+001_Proposal_and_Feedback/   Research proposal + marking feedback (admin)
+002_Dataset/
+  raw/                        sepa/, osm/, nasa_elevation/ (tracked);
+                               rainfall/, rainfall_2026_provisional/ (NOW
+                               GIT-IGNORED — see Section 6)
+  processed/                  feature_matrix*.csv, rf_model_40yr.joblib
+  outputs/                    Generated figures (build artefacts)
+  archive/                    Superseded intermediate data (provenance)
+  raw/README.md                NEW — data source table (this session)
+003_Code/                    01-04 pipeline notebooks, 05-07 figure scripts
+  archive/                     Superseded exploratory notebooks/scripts
+  archive/README.md            NEW — marks archive as historical (this session)
+  cache/                       git-ignored
+004_Ethics/                  001_Final_Approved/ (blank templates only),
+                               002_Archive/ (blank templates only)
+                               Recruitment/ — LOCAL ONLY, git-ignored, never
+                               committed (verified — Section 7)
+005_Progress_Logs/           Submitted progress logs
+006_Dissertation/            Chapters MD/DOCX, figures/, screenshots/
+007_Dashboard/               versionA.py, versionB.py (both edited this
+                               session), care_paths.py (NEW, this session),
+                               step1.py/step3.py (build history, unchanged
+                               behaviourally, docstring note added)
+008_Reference_Documents/     Reference PDFs
+009_Project Report Structure/ Dissertation structure/style planning docs
+.streamlit/config.toml       Shared light theme
+.gitignore                   Updated this session (Section 6)
+README.md                    Rewritten this session (Section 11)
+requirements.txt             Already present (prior session), unchanged
+
+===================================================================
+2. RUNTIME FILES REQUIRED BY VERSION A
+===================================================================
+Traced directly from 007_Dashboard/care_dashboard_versionA.py imports and
+function calls (not guessed):
+  - 002_Dataset/processed/feature_matrix_40yr.csv   (DATA_PATH)
+  - 002_Dataset/processed/rf_model_40yr.joblib      (MODEL_PATH)
+  - 002_Dataset/raw/sepa/PVAv2.gpkg                 (SEPA_PVA_PATH)
+  - .streamlit/config.toml                          (theme; must launch
+                                                       from repo root)
+  - postcodes.io API (live, internet required)       (postcode search,
+                                                       postcode-district list)
+All three local files are already tracked and present. No st.image() calls
+to precomputed PNGs — Version A has no "Model evaluation" section (that
+content lives in 04_ML_Model.ipynb / dissertation Chapter 4, confirmed by
+reading the actual script, not assumed from CLAUDE.md's description).
+
+===================================================================
+3. RUNTIME FILES REQUIRED BY VERSION B
+===================================================================
+Identical file dependencies to Version A (same DATA_PATH/MODEL_PATH/
+SEPA_PVA_PATH/postcodes.io), PLUS:
+  - shap.TreeExplainer built live at startup from the model + an in-memory
+    80/20 train split of feature_matrix_40yr.csv (no separate file; SHAP
+    values are computed per-click, not precomputed/cached to disk)
+No st.image() calls either — Version B's "Model evaluation" tab was already
+removed in a prior session (confirmed in the script's own docstring and by
+reading the code); that content lives in 04_ML_Model.ipynb / dissertation
+Chapter 4.
+
+===================================================================
+4. PUBLIC DATA SOURCES
+===================================================================
+See 002_Dataset/raw/README.md (new, this session) for the full table.
+Summary:
+  SEPA PVA v2        — included (raw/sepa/PVAv2.gpkg, 10.7MB)
+  OpenStreetMap       — included (raw/osm/*.gpkg, Glasgow-clipped extracts,
+                         ODbL)
+  NASA SRTM           — included (raw/nasa_elevation/*.gpkg, ~29.9MB,
+                         public domain)
+  Met Office HadUK-Grid — NOT included (467 NetCDF files, ~1.4GB); CEDA
+                         acquisition instructions documented instead
+  postcodes.io         — live API, no file
+
+===================================================================
+5. DATA ACQUISITION / DISTRIBUTION STRATEGY
+===================================================================
+Two-level strategy implemented per the brief:
+  Level 1 (run CARE): the three runtime files above are included; no
+    download needed to launch either dashboard.
+  Level 2 (reproduce research): 002_Dataset/raw/README.md documents SOURCE /
+    PURPOSE / ACQUISITION / LOCATION / RUNTIME-OR-PREPROCESSING DEPENDENCY /
+    LICENSING for every dataset, including exact CEDA acquisition
+    instructions for the one dataset not redistributed (HadUK-Grid rainfall).
+
+===================================================================
+6. FILES INTENTIONALLY EXCLUDED (this session's changes to .gitignore)
+===================================================================
+NEW this session:
+  - 002_Dataset/raw/rainfall/ and raw/rainfall_2026_provisional/ (467 + 7
+    NetCDF files, ~1.4GB total). DISCOVERY: these were already committed in
+    git history (commit 95a8898) — no single file exceeds GitHub's 100MB
+    limit, but the aggregate is a serious clone-size/portability problem.
+    ASKED THE USER how to proceed; they chose "untrack going forward, keep
+    in past history" — so this session ran `git rm -r --cached` on both
+    directories (files remain on local disk, just no longer tracked) and
+    added them to .gitignore. This is staged as a deletion, not yet
+    committed. IMPORTANT CAVEAT: because history was NOT rewritten (per the
+    brief's own instruction not to rewrite history without a privacy/
+    security reason, and the user's explicit choice), a fresh `git clone`
+    will still pull the historical ~1.4GB from old commits until/unless a
+    history rewrite is separately authorised. See Section 15 for the
+    resulting .git size.
+  - .env, .env.*, .idea/, .vscode/ — added for completeness (Part 14 of the
+    brief listed these; they were missing from the existing .gitignore).
+Already present before this session (verified, unchanged):
+  - CLAUDE.md, .claude/ — dev-tooling
+  - 004_Ethics/Recruitment/, *Participant Questionnaire*.xlsx — participant
+    data
+  - CARE_Study_Notes.docx — personal notes
+  - 002_Dataset/processed/rainfall_daily_1987_2025.parquet — 191MB derived
+    artefact
+  - CSPF2025_01_D1b_Formatted_report_Final_2025_08_06.pdf — third-party PDF
+  - Superseded dissertation drafts (FORMATTED_1.docx, FORMATTED_1_BACKUP.docx,
+    Archive/)
+
+===================================================================
+7. PARTICIPANT-DATA PRIVACY VERIFICATION
+===================================================================
+- `git ls-files` — zero participant-identifying files tracked. Only the
+  BLANK, ethics-approved templates (Consent_Form_CARE.docx/.pdf,
+  Participant_Information_Sheet_CARE.docx/.pdf, Questionnaire_v2.pdf under
+  004_Ethics/001_Final_Approved/ and 002_Archive/) are tracked — these are
+  templates, not completed submissions, and contain no participant names or
+  responses.
+- `git log --all --diff-filter=A --name-only` searched for "Recruitment",
+  "*.xlsx", and each of the four recruitment sub-folder names (Sahil,
+  Sarvesh, Akanksha, Khushi) across the FULL history — zero matches. This
+  data was never committed, at any point, in any commit.
+- `004_Ethics/Recruitment/` and `CARE_Study_Notes.docx` verified as
+  effectively git-ignored (`git check-ignore -v`).
+- CARE_Study_Notes.docx WAS committed once, in the very first commit
+  (2deecf1) — inspected its content directly: it is the author's own
+  supervisor-meeting study notes (project explanation, dataset notes), not
+  participant data, and contains no other person's identifying information.
+  It is being removed from tracking in this session's staged changes
+  (already git-ignored going forward). Not flagged as requiring a history
+  rewrite — no participant PII involved.
+- Aggregated dissertation findings (n=6, 3/3 splits, thematic tallies) are
+  descriptive statistics only — no individual response text or participant
+  identity is reproduced anywhere in the tracked repository.
+
+===================================================================
+8. ABSOLUTE-PATH VERIFICATION
+===================================================================
+Active code — CLEAN (zero `/Users/riteshghorpade` references remain):
+  - 007_Dashboard/care_dashboard_versionA.py, versionB.py — now use a new
+    shared 007_Dashboard/care_paths.py (PROJECT_ROOT = Path(__file__)
+    .resolve().parents[1]), with a require() helper that raises a clear
+    FileNotFoundError naming the missing file and pointing to README.md
+    (never exposing a local path) if a required file is missing.
+  - 003_Code/05_Dissertation_Figures.py, 06_Dissertation_Diagrams.py,
+    07_Usability_Figures.py — converted to PROJECT_ROOT-relative pathlib.
+  - 003_Code/01_Data_Collection.ipynb through 04_ML_Model.ipynb — BASE
+    variable converted to `str((Path.cwd() / ".." / "002_Dataset")
+    .resolve())`, documented as assuming the notebook's own folder
+    (003_Code/) as the Jupyter working directory (the default). Three
+    stray absolute paths inside stored PRINT OUTPUT (not source, frozen
+    from a prior execution) in 03_Feature_Engineering.ipynb and
+    04_ML_Model.ipynb were also redacted to relative-looking text —
+    text-only edit, no measured value/result changed. All 4 notebooks
+    re-validated as syntactically valid JSON after editing.
+  - 006_Dissertation/CARE_Dissertation_FINAL_REPOSITORY_ALIGNED.docx (new
+    this session) — Appendix A rewritten to remove all 3 hardcoded paths
+    and reframe the section from "Known Limitation" to a normal
+    requirements description; A.6 troubleshooting and A.7 limitations
+    updated to match; new A.8 Data Strategy and A.9 Data Sources sections
+    added. Verified zero `/Users/` or `riteshghorpade` matches anywhere in
+    the resulting document (all 590 paragraphs + all 13 tables scanned).
+    Verified byte-identical to the original FORMATTED_v2.docx everywhere
+    OUTSIDE Appendix A (0 paragraph diffs, 0 table-cell diffs) — no
+    dissertation finding, number, or table was touched.
+
+Deliberately left as-is (documented, not fixed — matches the brief's "do
+not spend unnecessary time on obsolete archive scripts" instruction):
+  - 003_Code/archive/*.py, *.ipynb — historical, superseded; a new
+    003_Code/archive/README.md now explicitly states these are not
+    portable/maintained.
+  - 007_Dashboard/care_dashboard_step1.py, step3.py — explicit build
+    history per CLAUDE.md, "kept for provenance, not for further
+    development"; a one-line docstring note was added to each stating they
+    still use the author's original absolute path and won't run unmodified
+    elsewhere.
+
+KNOWN REMAINING MISMATCH (not fixed — outside this session's authorised
+scope, flagged for the user):
+  - 006_Dissertation/CARE_Dissertation_Chapters_1to6_Draft.md (the
+    Markdown "source of truth" per CARE_FINAL_AUDIT.txt) and the already-
+    staged CARE_Dissertation_FINAL.docx (built from that .md in a PRIOR
+    session) both still contain the OLD Appendix A text: the three
+    hardcoded absolute paths, "Known Limitation" framing, `venv` (not
+    `.venv`) commands, and the stale FileNotFoundError troubleshooting
+    line. This session's brief explicitly scoped the Appendix A update to
+    FORMATTED_v2.docx -> FINAL_REPOSITORY_ALIGNED.docx only (user
+    confirmed this choice directly when asked), so the .md source and
+    FINAL.docx were deliberately left untouched. Result: there are now
+    three different versions of Appendix A in the repository
+    (FORMATTED_v2.docx = old/untouched, FINAL.docx = old, matches the .md
+    = old, FINAL_REPOSITORY_ALIGNED.docx = fixed/new). The user should
+    decide whether FINAL.docx / the .md source should also be updated for
+    full consistency, and which .docx is the one actually submitted.
+
+===================================================================
+9. LARGE-FILE VERIFICATION
+===================================================================
+- Largest file now tracked in the working tree: 002_Dataset/raw/
+  nasa_elevation/nasa_elevation_glasgow.gpkg at 29.9MB. No tracked file
+  exceeds 50MB (checked directly, not assumed).
+- Full git history (`git rev-list --objects --all`) searched for every
+  .parquet/.pdf blob ever committed — largest is 2.85MB. The 191MB
+  rainfall_daily_1987_2025.parquet and the third-party PDF have zero trace
+  anywhere in history (filename search across every commit's added-file
+  list also returned zero matches) — the prior session's history rewrite
+  claim is verified correct.
+- The 1.4GB raw rainfall NetCDF archive (467+7 files) is untracked in this
+  session's staged changes (Section 6) but remains in past commit history
+  — .git is currently 1.5GB on disk (Section 15).
+
+===================================================================
+10. DASHBOARD TEST RESULTS
+===================================================================
+Both dashboards launched locally (`streamlit run`, separate ports) against
+the new portable paths and tested live in a real browser (not just
+import-checked):
+
+VERSION A — all PASS:
+  application launches (HTTP 200, no path errors) — data loads — model
+  loads — postcode search (tested "G1 1XQ", resolved correctly) — map
+  renders with risk-coloured points and historical-event markers —
+  prediction badge + confidence (98% shown) — compass distances to Clyde/
+  university — citywide context cards (elevation percentile, risk share,
+  nearest SEPA zone "Inside zone", citywide risk donut) — feature value
+  table — filters (risk level, Clyde distance, postcode district, more-
+  filters expander) — recommendations panel (risk-tiered, SEPA/Ready
+  Scotland cited) — "Reset search and filters" (confirmed it clears the
+  search box and reverts the panel to its default state).
+
+VERSION B — all PASS:
+  application launches (HTTP 200, dark theme rendered) — data/model load —
+  postcode search — map — Overview/"Why this prediction?" tabs both render
+  — prediction summary + 99% confidence shown — "Why am I seeing this
+  result?" button correctly jumps to the SHAP tab — live SHAP panel: plain-
+  English narrative ("...mainly because it sits at a moderate elevation
+  (27m)..."), full diverging bar chart (all 9 features, red/blue push-up/
+  push-down colouring), inline definitions for the top 2 features, "what do
+  the other features mean?" expander — recommendations panel — filters —
+  citywide context cards, identical to Version A.
+
+No retraining, no result changes — only path resolution was modified, and
+both dashboards' actual predictions/values were unaffected (same model
+file, same data file, same numbers observed in testing as expected from the
+underlying data).
+
+===================================================================
+11. README STATUS
+===================================================================
+Fully rewritten (previous README.md was a stale placeholder referencing an
+old 001_SEPA/002_OSM directory layout that no longer exists). New README.md
+covers: quick start (clone/venv/pip install/run both dashboards, tested
+commands only), data requirements table (traced from actual code, not
+assumed), full research-reproduction pipeline diagram pointing at the real
+notebook/script names, external source datasets with a pointer to
+002_Dataset/raw/README.md, a Privacy section, full repository structure,
+environment (Python 3.9.6, macOS-tested only, explicitly not claiming
+Windows/Linux support), coordinate systems, and a known-limitations list
+cross-checked against dissertation Section 3.19 (spatial autocorrelation
+and XGBoost-SHAP-comparability items added after the cross-consistency
+check surfaced they were initially missing).
+
+===================================================================
+12. APPENDIX STATUS
+===================================================================
+006_Dissertation/CARE_Dissertation_FINAL_REPOSITORY_ALIGNED.docx created
+(NEW file; CARE_Dissertation_FORMATTED_v2.docx left completely unmodified —
+verified via unchanged file size/mtime/MD5). Appendix A rewritten per the
+brief's checklist: A.2 environment commands aligned with README (.venv);
+A.3 reframed from "Known Limitation" to a normal requirements section
+showing the new relative-path resolution code; A.6 troubleshooting's
+FileNotFoundError line rewritten to match the new error message's actual
+behaviour; A.7 dropped the now-fixed hardcoded-path limitation sentence
+while keeping every genuine remaining limitation; new A.8 Data Strategy
+(A/B/C/D per the brief) and A.9 Data Sources (verified source table as
+prose/bullets, matching the appendix's existing bullet-list convention
+rather than introducing a new native-Word-table format) sections added.
+See Section 8 above for the one known residual inconsistency (the .md
+source / FINAL.docx were not updated, per explicit user scoping decision).
+
+===================================================================
+13. requirements.txt STATUS
+===================================================================
+Unchanged this session (already present, generated in a prior session from
+a `pip freeze` of the working macOS/Python 3.9.6 environment, ~156 package
+pins, Apple-internal wheel paths already scrubbed). Verified all packages
+imported by the dashboards (streamlit, pandas, numpy, joblib, folium,
+requests, geopandas, matplotlib, shap, streamlit-folium, pyproj, shapely,
+scikit-learn) import successfully in the current environment.
+
+===================================================================
+14. GIT HISTORY VERIFICATION
+===================================================================
+- CLAUDE.md / .claude/ — zero trace in `git ls-files`, zero trace in
+  `git log --all --diff-filter=A --name-only`, zero trace in any commit
+  message.
+- Third-party PDF (CSPF2025_...) and the 191MB parquet — zero trace
+  anywhere in history (Section 9).
+- Participant data — zero trace anywhere in history (Section 7).
+- NEW discovery this session, NOT a rewrite of already-scrubbed material:
+  the 1.4GB raw rainfall NetCDF archive IS still in history (commit
+  95a8898) — see Section 6/8/15. No history rewrite was performed for this
+  (user's explicit choice); it is untracked going forward only.
+- No other history rewrite was performed or is recommended beyond what the
+  brief already describes as done.
+
+===================================================================
+15. EXACT LIST OF STAGED CHANGES (summary; full detail via `git status`)
+===================================================================
+  49 files staged as Added (A)
+  11 files staged as Modified (M):
+     .gitignore, README.md, 003_Code/01_Data_Collection.ipynb,
+     02_EDA.ipynb, 03_Feature_Engineering.ipynb, 04_ML_Model.ipynb,
+     007_Dashboard/care_dashboard_step1.py, care_dashboard_step3.py,
+     care_dashboard_versionA.py, care_dashboard_versionB.py,
+     002_Dataset/outputs/roc_curves.png (pre-existing staged change, not
+     from this session)
+  478 files staged as Deleted (D): 474 of these are the untracked raw
+     rainfall NetCDF files (Section 6); the remainder are
+     CARE_Study_Notes.docx and superseded dissertation draft files already
+     staged for removal before this session began.
+
+`git ls-files` after staging: 178 tracked files (down from 647 before this
+session, almost entirely due to untracking the raw rainfall archive).
+
+`.git` directory size: 1.5GB (reflects full history including the still-
+present raw rainfall commit; will not shrink until/unless a history
+rewrite is separately authorised — see Section 6/8).
+
+===================================================================
+16. REMAINING WARNINGS / OPEN ITEMS FOR THE USER
+===================================================================
+1. `.git` is 1.5GB. A fresh clone will still pull the full historical raw
+   rainfall archive until a history rewrite is authorised. Untracking it
+   (done this session) stops further growth but does not shrink what
+   already exists.
+2. Three different versions of dissertation Appendix A now exist in the
+   repository (FORMATTED_v2.docx / FINAL.docx+.md source / new
+   FINAL_REPOSITORY_ALIGNED.docx) — see Section 8/12. Decide which is the
+   actual submission copy, and whether FINAL.docx/the .md source should
+   also be updated for consistency.
+3. The Table of Contents in FORMATTED_v2.docx (and therefore in
+   FINAL_REPOSITORY_ALIGNED.docx, since it was derived from it per the
+   user's explicit choice) still contains the "Right-click here and choose
+   'Update Field'" placeholder — this was already fixed in FINAL.docx in a
+   prior session but that fix was not present in FORMATTED_v2.docx. Out of
+   scope for this session (repository/path alignment only); flagged for
+   awareness.
+4. This audit and all changes above are STAGED ONLY. Run `git status` /
+   `git diff --cached` yourself to review before committing. No commit or
+   push was performed.

@@ -1,2 +1,54 @@
+# OS
 .DS_Store
+Thumbs.db
+
+# AI tooling — not part of the submitted project
+CLAUDE.md
+.claude/
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+venv/
+*.egg-info/
+
+# Environment / editor
+.env
+.env.*
+.idea/
+.vscode/
+
+# Project caches / generated intermediates
 003_Code/cache/
+
+# Large generated data artefact — exceeds GitHub's 100MB per-file limit;
+# regenerate via 003_Code/03_Feature_Engineering.ipynb from
+# 002_Dataset/raw/rainfall/*.nc instead of committing it
+002_Dataset/processed/rainfall_daily_1987_2025.parquet
+
+# Raw HadUK-Grid rainfall archive — 467 NetCDF files, ~1.4GB total. Not
+# individually over GitHub's 100MB limit, but not required to run the
+# dashboards (only feature_matrix_40yr.csv and rf_model_40yr.joblib are —
+# see README.md). Obtain from CEDA per 002_Dataset/raw/README.md to
+# reproduce 03_Feature_Engineering.ipynb from raw data.
+002_Dataset/raw/rainfall/
+002_Dataset/raw/rainfall_2026_provisional/
+
+# Third-party reference material — not the author's own work, not part
+# of the project deliverable, redistribution concern
+CSPF2025_01_D1b_Formatted_report_Final_2025_08_06.pdf
+
+# Participant data — must never be pushed (Consent Form promises no
+# identifying information will be made publicly available)
+004_Ethics/Recruitment/
+*Participant Questionnaire*.xlsx
+
+# Personal working notes, not a project deliverable
+CARE_Study_Notes.docx
+
+# Superseded dissertation working files (kept locally for provenance)
+006_Dissertation/CARE_Dissertation_FORMATTED_1.docx
+006_Dissertation/CARE_Dissertation_FORMATTED_1_BACKUP.docx
+006_Dissertation/Archive/

@@ -1,0 +1,87 @@
+CARE DISSERTATION — FINAL WORD COUNT REPORT
+=============================================
+Generated: 2026-08-11 (final high-distinction revision session)
+Source: 006_Dissertation/CARE_Dissertation_FINAL.docx (regenerated this session)
+Method: python-docx traversal of document.xml body in true reading order
+        (paragraphs + table cells), region boundaries matched on heading
+        STYLE (Heading1/Heading2) + exact text, not substring match.
+
+CONVENTION USED
+---------------
+University convention (per prior sessions' verification of the CS958 style
+guide, 009_Project Report Structure/): main-body word count excludes title
+page, declaration, abstract, acknowledgements, contents, list of
+illustrations, references, and appendices. This report follows that
+convention for the headline MAIN BODY TOTAL below, and additionally reports
+every other document element separately for full transparency, per this
+session's request — nothing is assumed included or excluded silently.
+
+MAIN BODY (counts toward the 9,000-11,000 requirement)
+--------------------------------------------------------
+Chapter 1 (Introduction):                              1,214
+Chapter 2 (Critical Literature Review):                 1,559
+Chapter 3 (Methodology, System Design & Implementation): 2,982
+Chapter 4 (Results and Technical Evaluation):            2,331
+Chapter 5 (User Evaluation and Discussion):              1,423
+Chapter 6 (Conclusions, Recommendations & Future Work):  1,113
+-----------------------------------------------------------------
+MAIN BODY TOTAL:                                        10,622
+
+Status: PASS. Inside the required 9,000-11,000 range.
+Target: ~10,000 (soft target 9,800-10,500). This total sits 122 words above
+the soft 10,500 ceiling and 378 words below the hard 11,000 cap -- accepted
+as a reasonable final balance after two full editing passes (see note below).
+
+EXCLUDED FROM MAIN BODY (reported separately, not counted above)
+--------------------------------------------------------------------
+Front matter (Title Page, Declaration, Acknowledgements,
+  Table of Contents, List of Figures, List of Tables,
+  List of Abbreviations):                                   854
+Abstract:                                                    468
+References:                                                  843
+Appendices (A.1-A.9, incl. Table 3.3 and Table 4.4
+  reproduced there):                                       1,260
+-----------------------------------------------------------------
+TOTAL EXCLUDED CONTENT:                                     3,425
+
+WHOLE-DOCUMENT TOTAL (main body + excluded content):       14,047
+
+FIGURES AND TABLES (subset of the totals above, not additional)
+--------------------------------------------------------------------
+Figure captions (43 figures, caption text only):           ~1,290 words
+  (counted within their respective chapter's total above --
+  a figure's caption is part of the chapter it appears in)
+Table cell + caption content (13 body tables + 2 tables
+  reproduced in Appendix A):                                ~1,470 words
+  (counted within their respective chapter/appendix total above)
+
+Figures: 43 total (1.1-1.3, 2.1, 3.1-3.18, 4.1-4.15, 5.1-5.6)
+Tables:  13 total (2.1, 3.1-3.3, 4.1-4.6, 5.1, 6.1-6.2)
+
+SESSION CHANGES AFFECTING WORD COUNT
+--------------------------------------------------------------------
+This session, on top of the prior session's 10,368-word baseline:
+  + Fixed Table 3.1 "see below" placeholders with real computed values
+    (mean_winter_mm_day, max_daily_mm) -- +0 net (replaced placeholder text)
+  + Fixed a LaTeX $...$ math-rendering bug (Section 3.3 correlation values;
+    the flood_risk display formula) that caused empty text gaps in the
+    rendered docx -- converted to safe plain-text/monospace notation
+  + Added Accuracy/Precision/Recall/F1/Macro-F1 formulas (Section 3.7),
+    Random Forest ensemble formula (Section 3.6), SHAP additive formula
+    (Section 3.8), each with definition + justification prose -- +~250 words
+  + Added Figure 1.3, an 18-stage project roadmap diagram (Section 1.9) --
+    +~35 words (caption + one linking sentence)
+  + Trimmed redundant prose in Sections 2.8, 5.9 to offset the above -- ~-65
+    words
+  Net change this session: 10,368 -> 10,622 (+254 words)
+
+VERIFICATION METHOD
+--------------------------------------------------------------------
+Measured directly from the actual regenerated .docx (not the markdown
+source, which can diverge from rendered output due to table-cell splitting,
+image-caption text extraction, and heading-paragraph inclusion). A boundary-
+detection bug from an earlier pass in this same overall project (matching
+any paragraph whose TEXT started with "Chapter 1", including a front-matter
+List-of-Figures lead-in bold line reading "Chapter 1 -- Introduction") was
+found and fixed by requiring the boundary paragraph's STYLE to be Heading1/
+Heading2, not just its text. This report uses the corrected method.

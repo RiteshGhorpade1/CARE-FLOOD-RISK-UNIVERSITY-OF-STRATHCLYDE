@@ -10,6 +10,10 @@ which is where the SHAP explanation panel actually landed.
 
 Also adds postcode search: type a UK postcode, geocode it via the free
 postcodes.io API, and jump to + highlight the nearest grid point.
+
+Build-history file, kept for provenance only — DATA_PATH/MODEL_PATH below
+still use the author's original absolute filesystem path and will not run
+unmodified on another machine.
 """
 
 import math

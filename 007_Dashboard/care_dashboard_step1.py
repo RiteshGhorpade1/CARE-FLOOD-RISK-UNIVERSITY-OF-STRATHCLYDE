@@ -10,6 +10,11 @@ explanation panel yet either.
 
 Run with:
     python3 -m streamlit run care_dashboard_step1.py
+
+Build-history file, kept for provenance only (see care_dashboard_versionA.py/
+versionB.py for the current, maintained dashboards) — DATA_PATH below still
+uses the author's original absolute filesystem path and will not run
+unmodified on another machine.
 """
 
 import streamlit as st

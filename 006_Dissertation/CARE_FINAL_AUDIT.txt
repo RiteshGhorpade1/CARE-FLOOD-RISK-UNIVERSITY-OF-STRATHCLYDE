@@ -1,0 +1,264 @@
+CARE DISSERTATION — FINAL SUBMISSION AUDIT (SESSION 2)
+Generated: 2026-08-09
+Input file: 006_Dissertation/CARE_Dissertation_FORMATTED_1.docx
+Backup created: 006_Dissertation/CARE_Dissertation_FORMATTED_1_BACKUP.docx
+Source of truth edited: 006_Dissertation/CARE_Dissertation_Chapters_1to6_Draft.md
+Deliverable produced: 006_Dissertation/CARE_Dissertation_FINAL.docx
+(supersedes the prior session's CARE_Dissertation_FINAL_SUBMISSION.docx and
+the earlier, now-stale CARE_Dissertation_FINAL.docx)
+
+NOTE ON METHOD: CARE_Dissertation_FORMATTED_1.docx was inspected directly
+(python-docx / raw OOXML) before any edits were made. It was found to be
+structurally identical to the prior session's generated .docx (same TOC
+placeholder text still present, same content) — i.e. no manual Word-side
+edits had been made to it since generation. Edits this session were
+therefore made in the maintained Markdown source
+(CARE_Dissertation_Chapters_1to6_Draft.md) and the .docx was regenerated
+from it via the established pandoc + XML post-processing pipeline, rather
+than hand-patched in place — this preserves a single source of truth and
+avoids the .md/.docx drifting apart, consistent with how this dissertation
+has been built across every session so far.
+
+===================================================================
+1. WORD COUNT
+===================================================================
+Authoritative count = measured directly from the final rendered .docx via
+python-docx (paragraphs + table cells, Chapter-1-heading through
+"References" heading).
+
+  Chapter 1: Introduction .......................  1,259 words
+  Chapter 2: Critical Literature Review .........  1,984 words
+  Chapter 3: Methodology, System Design & Impl. .  3,423 words
+  Chapter 4: Results and Technical Evaluation ...  2,272 words
+  Chapter 5: User Evaluation and Discussion .....  1,616 words
+  Chapter 6: Conclusions, Recommendations, FW ...  2,236 words
+  ------------------------------------------------------------
+  MAIN BODY TOTAL (Ch.1-6) ......................  12,790 words
+  Appendix A (excluded from main-body count) ....    781 words
+  Excluded from main-body count (approx, not
+  separately re-measured this session): title page,
+  declaration, abstract, acknowledgements,
+  contents, list of figures/tables/abbreviations,
+  references (34 entries), Appendix A.
+
+ORIGINAL (start of this session, prior .docx): ~12,900 words (per that
+file's own Declaration line, itself carried over from the previous
+session's audited figure of 12,892).
+
+WORDS REMOVED THIS SESSION: approximately 100-140 net words. Chapter 2
+(Critical Literature Review) was the main contributor: 2,100 → 1,984
+words (all six "What is known" literature paragraphs condensed, the
+now-redundant standalone "Design link" lines having already been removed
+in the prior session). Chapter 1 and the front-matter connective prose
+were lightly tightened. Chapters 3, 4 and 5 were NOT further cut this
+session (see below).
+
+TARGET (this session's brief): 10,300-10,600 words.
+RESULT: 12,790 — approximately 2,190-2,490 words over target. NOT MET.
+
+WHY FURTHER CUTTING WAS NOT PURSUED THIS SESSION: this session's brief
+supplied an extensive, explicit "DO NOT CUT" list — research questions,
+objectives, key methodological decisions, dataset descriptions, model
+evaluation methodology, Random Forest results, XGBoost comparison, SHAP
+methodology, recommendation methodology, participant evaluation
+methodology, participant findings, data-quality disclosures, limitations,
+RQ evidence, contribution, future work, citations, and load-bearing
+figures/tables. Chapters 3 (3,423 words), 4 (2,272 words) and 5 (1,616
+words) consist almost entirely of this protected content — Chapter 3 is
+methodology and system documentation, Chapter 4 is the model
+results/SHAP/verification evidence, Chapter 5 is the real six-participant
+findings. Both this session and the prior one already compressed these
+chapters substantially (Chapter 3's dashboard-screen sections alone were
+cut ~35% last session). Cutting materially further into these three
+chapters without violating the explicit protection list was judged not
+achievable through prose-tightening alone; it would require either
+removing whole evidence items (explicitly prohibited: "Do NOT cut
+important evidence merely to hit the number") or restructuring/merging
+sections (a larger structural change than "precision, not loss of
+substance" implies, and riskier to cross-references).
+Chapter 2 (literature review) and Chapter 1 (introduction) — the two
+chapters NOT on the protected list — were the ones actually compressed
+this session, and both are now close to as tight as they can go without
+losing citations or the critical-synthesis content Chapter 2 explicitly
+needs.
+
+WHAT WOULD ACTUALLY CLOSE THE REMAINING ~2,200-WORD GAP: a genuine
+structural decision, not further sentence-level editing — e.g.
+deliberately shortening Chapter 3's screen-by-screen dashboard
+documentation (Sections 3.9-3.16) to table-only form (Table 3.2 already
+covers Version A/B feature parity) rather than prose-plus-table for each
+screen, or moving some figure-heavy descriptive content to an appendix.
+Either is a real content/structure decision that should be made by the
+student/supervisor, not applied unilaterally under a "do not change
+methodology" instruction. Flagged here rather than done silently.
+
+===================================================================
+2. KEY CHANGES MADE THIS SESSION
+===================================================================
+- Declaration: "Dissertation Type (circle one): 1 / 2 / 3 / 4 / 5" ->
+  "Dissertation Type: 3 — Application Based". CONFIRMED in final .docx.
+- Declaration: word-count line updated from the stale "12,900 words" to
+  the true measured figure, "approximately 12,800 words" (rounded from
+  the exact 12,790 measured post-build). CONFIRMED.
+- Table 5.1, Version B "Risk understanding" cell: changed from "All 3
+  correctly stated risk level and basis, with feature-level specificity"
+  (which contradicted the documented P06 Q3/Q4-5 inconsistency) to "Two
+  participants consistently stated the displayed risk level and basis;
+  P06 contained a documented Q3/Q4-5 inconsistency (Section 5.13).
+  Version B responses nevertheless showed greater feature-level
+  specificity." CONFIRMED in final .docx (verified via direct XML
+  search). Section 5.13's full disclosure of the P06 anomaly, the
+  missing-ID-5 anomaly, and the P05 duplicate-wording/timestamp
+  anomalies were left untouched — nothing was removed or softened there.
+- Table of Contents: the "Right-click here and choose 'Update Field' (or
+  press F9)..." instructional placeholder sentence has been REMOVED
+  entirely. In its place is a real, fully generated multi-level TOC: 96
+  hyperlinked entries (every Chapter/section heading except the "Table
+  of Contents" entry itself), each a genuine Word hyperlink to that
+  heading's bookmark plus a real PAGEREF field for the page number.
+  CONFIRMED via direct XML search: zero occurrences of "Right-click
+  here" in the final document.
+- Chapter 2 literature-review paragraphs (Sections 2.2-2.7 "What is
+  known" / "Strengths and weaknesses" / "Approaches" paragraphs)
+  condensed for repetition/verbosity, all citations retained, all
+  critical-synthesis content (Section 2.8) retained unchanged.
+- Chapter 1 background/scope prose lightly tightened (a handful of
+  redundant qualifying clauses removed).
+- Filler-phrase and overclaiming-language sweep: searched the full
+  document for "it is important to note that", "it should be noted
+  that", "as previously mentioned", "in order to", "it can clearly be
+  seen that", "proves", "definitively demonstrates", "guarantees",
+  "100% accurate", "fully validates", "universally applicable". NONE
+  were found requiring a fix — the two "guarantees" matches in the
+  document are legitimate technical statements (SHAP's mathematical
+  consistency guarantees; a reproducible-environment installation
+  guarantee in the Appendix), not overclaiming about flood-prediction
+  results. No changes were needed for this item.
+- Consistency sweep: searched for stale/contradictory text (see Section
+  4 below for full results) — only the Table 5.1 cell and Declaration
+  Type/word-count lines were genuine inconsistencies; everything else
+  checked out already consistent.
+
+===================================================================
+3. CONFIRMATION OF PRESERVED CONTENT (per the brief's explicit checklist)
+===================================================================
+- Model results preserved EXACTLY, unchanged, and verified consistent
+  everywhere they appear: 99.62% test accuracy, 99.50% macro F1, 99.26%
+  (± 0.17%) random CV, 99.21% (± 0.36%) spatial-block CV, elevation
+  62.9% feature importance, distance-to-Clyde 17.2% feature importance.
+  (Script-verified: every occurrence of each figure in the document
+  matches exactly; no drift.)
+- Dataset facts preserved: 7,843 points, 9 features — unchanged.
+- Participant evidence preserved exactly: 6 participants (P01-P03
+  Version A, P04-P06 Version B); 6/6 recommendation usefulness; Version
+  B 3/3 trust/reduced-black-box-perception; Version B 2/3
+  technical/comprehension friction; all 6 rated the dashboard easy/
+  straightforward to navigate; accessibility conclusions remain
+  qualified (assistive-technology users not specifically recruited/
+  tested, Section 3.19/6.7). None of these numbers were altered.
+- Data-quality disclosures preserved in full: missing response ID 5,
+  P05 Q5/Q6 identical wording, P05/P06 identical timestamps, P06
+  Q3-vs-Q4/Q5 contradiction — all still explicitly stated in Section
+  5.13, none removed, corrected, or softened.
+- The engineered-proxy-label / not-independently-validated distinction
+  (Section 3.5, 4.2, 4.14, 6.3, 6.9, Abstract) preserved throughout as
+  the dissertation's central methodological caveat — not reduced to a
+  single closing mention.
+- Research questions RQ1/RQ2/RQ3 unchanged (Section 1.6). Chapter 6
+  Table 6.1 evidence matrix (Research Question -> Evidence -> Main
+  Finding -> Limitation -> Conclusion) unchanged and still traceable.
+- The core CARE architecture and its framing as a systems-and-
+  communication contribution (not ML novelty) — Section 1.7, 6.4 —
+  unchanged.
+- No new performance metrics, participants, or results were introduced.
+- No unsupported real-world-flood-prediction claims were introduced or
+  found; "100% accuracy" does not appear anywhere in the document.
+
+===================================================================
+4. CONSISTENCY SWEEP — DETAILED RESULTS
+===================================================================
+Searched the full .md source for each of the following:
+  "12,900"                  -> found once (Declaration line) -> FIXED to 12,800
+  "12,900 words"             -> as above
+  "1 / 2 / 3 / 4 / 5"        -> found once (Declaration) -> FIXED
+  "Right-click here and choose" -> not present in .md (this text only
+                                    ever existed inside the compiled
+                                    .docx from the TOC-field placeholder,
+                                    which has now been replaced with a
+                                    real generated TOC — confirmed absent
+                                    in the new .docx)
+  "Update Field"              -> not present in .md; not present in the
+                                    new .docx (confirmed via XML search)
+  contradictory P06 descriptions -> Table 5.1 cell was the one genuine
+                                    inconsistency; Section 5.13's own
+                                    disclosure was already correct and
+                                    unchanged
+  inconsistent participant/version counts -> none found; 6 total / 3+3
+                                    split consistent everywhere
+  inconsistent model accuracy/F1/CV/feature-importance -> none found;
+                                    script-verified exact match at every
+                                    occurrence (Section 1 above)
+  "100% accuracy"             -> not present
+  unsupported real-world-prediction claims -> none found; every accuracy
+                                    statement is explicitly qualified as
+                                    "reconstructing the engineered
+                                    flood-risk proxy label," not
+                                    real-world flood prediction
+  "all three"/"all six" where P06 is the anomaly -> checked every
+                                    occurrence individually; all refer to
+                                    OTHER, correct findings (6/6
+                                    recommendation usefulness, 3/3 trust,
+                                    2/3 friction, 6/6 easy-to-navigate) —
+                                    not the risk-understanding claim that
+                                    Table 5.1 got wrong. No further fixes
+                                    needed.
+
+===================================================================
+5. STRUCTURAL / PRESENTATION VERIFICATION
+===================================================================
+- Figures: 41 (unchanged from prior session; none added/removed this
+  session).
+- Tables: 11 (2.1, 3.1-3.3, 4.1-4.4, 5.1, 6.1, 6.2 — unchanged from prior
+  session).
+- References: 34 entries (unchanged; no citations removed or added).
+- Section numbering: unchanged — no section was added, removed, merged
+  or renumbered this session, so cross-reference risk from this
+  session's edits is effectively zero.
+- TOC: rebuilt from scratch this session as a real, fully generated
+  multi-level table of contents (96 entries: every Chapter-1/Chapter-2
+  heading, i.e. every chapter title and every numbered section, each
+  hyperlinked to its heading via a genuine Word bookmark). Page numbers
+  are delivered via real PAGEREF fields, which — same constraint as
+  last session — cannot be pre-computed without a layout/rendering
+  engine (no Word or LibreOffice binary is available in this sandboxed
+  environment). settings.xml has <w:updateFields w:val="true"/>, so
+  Word will prompt "Update this document?" / auto-refresh fields on
+  first open; the user should accept that prompt (or press Ctrl+A then
+  F9) once before submission to populate real page numbers. This is
+  materially better than last session's placeholder-sentence approach:
+  there is no visible instructional text anywhere in the document now,
+  and the TOC is a real, navigable, correctly structured table even
+  before that one-time update — only the page-number column is blank
+  until then.
+- Page numbering sections: two Word sections confirmed present in the
+  final document — front matter (lowerRoman, footer1.xml) and Chapter 1
+  onward (decimal restarting at 1, footer2.xml), same mechanism as the
+  prior session, both using real Word PAGE fields.
+
+===================================================================
+6. WHAT WAS NOT INDEPENDENTLY VERIFIED (tooling limitation, disclosed)
+===================================================================
+- No Word or LibreOffice binary is available in this environment, so:
+  (a) the TOC's real page numbers could not be pre-computed/rendered;
+  (b) the document could not be exported to PDF for visual page-by-page
+  inspection (title/declaration, contents, Chapter 1, methodology, model
+  evaluation, Chapter 5, Table 5.1, SHAP discussion, Chapter 6,
+  references — the pages the brief asked to be checked visually);
+  (c) pagination-dependent formatting defects (stranded headings, badly
+  split tables, empty pages, text running outside margins) could not be
+  visually confirmed or ruled out. The document was verified
+  structurally sound via python-docx (opens without error) and via
+  direct OOXML inspection (section/footer/field structure correct), but
+  a visual read-through in Word before submission is recommended, same
+  as flagged last session.
+- The word-count target (10,300-10,600) was not met — see Section 1.
