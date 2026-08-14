@@ -1,45 +1,4 @@
-"""
-Version B — the advanced, explainable CARE dashboard.
 
-Independent of care_dashboard_versionA.py: imports only the three shared
-path constants from care_paths.py, and is otherwise fully self-contained —
-versionA.py is never imported, modified, or required at runtime by this
-file, and this file makes no changes to it either.
-
-Layout: a fixed 9-section, two-column, single-page layout (no st.tabs()),
-each section a bordered card — 1. Enter Postcode, 2. Prediction Summary,
-3. Location Details, 4. Risk Map (left column); 5. Monthly Rainfall
-Exposure, 6. Historical Rainfall Summary, 7. Seasonal Risk Overview,
-8. Why This Result? (live SHAP explanation), 9. Recommendations (right
-column). Fixed dark theme — this is Version B's visual identity,
-independent of versionA.py's always-light theme.
-
-The rainfall sections (5-7) are built from an additive offline
-preprocessing step (003_Code/08_Rainfall_Monthly_Seasonal.py) that
-aggregates the existing 002_Dataset/processed/rainfall_daily_1987_2025.parquet
-(already computed by 03_Feature_Engineering.ipynb, not re-touched here)
-into 002_Dataset/processed/rainfall_monthly_40yr.csv and
-rainfall_annual_40yr.csv — per-grid-point monthly climatology and an
-area-averaged 39-year annual series. Neither the flood-risk model nor its
-training data changes: these are new descriptive rainfall statistics only.
-
-Methodological note carried through every rainfall panel below: the trained
-Random Forest has no temporal dimension. flood_risk is a static per-point
-label (SEPA PVA membership + elevation), and the rainfall features that feed
-it are themselves 39-year-averaged constants, not time-varying inputs. The
-model cannot and does not predict how risk changes month to month or season
-to season. The monthly/seasonal/historical rainfall panels below are
-presented strictly as historical rainfall climatology/exposure, kept
-visually and textually separate from the model's risk classification and
-SHAP explanation — never as a month-specific flood forecast or probability.
-
-SHAP (section 8): shap.TreeExplainer, probability space, background = the
-same 80% training split (random_state=42) used in 04_ML_Model.ipynb,
-computed live per selected point.
-
-See 007_Dashboard/FINAL_DASHBOARD_A_B_AUDIT.md for the development history
-and audit trail behind this dashboard's current design.
-"""
 
 import calendar
 import datetime
