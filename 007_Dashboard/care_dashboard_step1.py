@@ -1,21 +1,4 @@
-"""
-CARE Dashboard — Step 1
-------------------------
-Basic risk map: loads feature_matrix_with_coords.csv, renders a folium map
-of a 1000-point sample colour-coded by the precomputed flood_risk label, and
-adds click interaction — clicking a point updates the right-hand panel with
-that point's risk level, coordinates, and feature values. No live model
-inference yet — that's Step 3 (see care_dashboard_step3.py). No SHAP
-explanation panel yet either.
 
-Run with:
-    python3 -m streamlit run care_dashboard_step1.py
-
-Build-history file, kept for provenance only (see care_dashboard_versionA.py/
-versionB.py for the current, maintained dashboards) — DATA_PATH below still
-uses the author's original absolute filesystem path and will not run
-unmodified on another machine.
-"""
 
 import streamlit as st
 import pandas as pd
