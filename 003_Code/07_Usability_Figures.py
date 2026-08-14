@@ -1,10 +1,4 @@
-"""
-Generates Chapter 5 figures from the real participant questionnaire responses
-(n=6: P01-P03 Version A, P04-P06 Version B). Every count below was tallied by
-hand against the verified xlsx export — no synthetic or estimated values.
-Source: "Climate Awareness and Risk Evaluation Dashboard — Participant
-Questionnaire(1-4).xlsx" (project root), read via 003_Code and cross-checked
-against the printed transcript during analysis.
+he printed transcript during analysis.
 """
 
 from pathlib import Path
