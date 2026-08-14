@@ -1,45 +1,4 @@
-"""
-Version A — the risk-only (no SHAP) variant of the CARE dashboard usability study.
 
-This and care_dashboard_versionB.py are the two final study versions (not
-sequential build steps — see step1.py/step3.py for the build history that
-led here).
-
-Consistency rule (simplification pass): every feature is identical to
-care_dashboard_versionB.py except two things B has and A doesn't — the
-SHAP explanation layer, and the "Why am I seeing this result?" jump-to-tab
-button (there's nothing to jump to here, since A has no second tab).
-Concretely, A has no narrative sentence, no ranked SHAP bars, and no
-per-feature definitions; everything else (postcode search, privacy note,
-map click-to-inspect, risk badge, classification confidence, nearest SEPA
-flood zone, compass, "more about this location" cards, practical advice,
-grid-snapping caveat, disclaimer, "What should I do now?" panel, filters,
-Reset search and filters) matches B. The selected-location panel shows the
-risk badge, confidence percentage, coordinates, compass indicator, and the
-raw feature table.
-
-Search/browse: postcode search plus a single merged "browse a district or
-landmark" dropdown (collapsed from two separate dropdowns, since they
-competed with the primary postcode search for attention) and a "Reset
-search and filters" button (resets by bumping a filters_version counter
-baked into every filter/search widget's key, forcing Streamlit to revert
-them to their declared defaults — the reliable way to reset widgets that
-don't expose a direct "set value" API). Historical flood events (1994,
-2002) remain as passive markers on the map, but the dedicated "only show
-points near a historical event" filter was removed — the checkbox/radius
-slider added a filtering dimension most users didn't need alongside the
-other seven filters already available.
-
-The panel also carries five compact st.metric "more about this location"
-cards below the badge/confidence/compass block: elevation framed against
-the citywide distribution, this point's risk class as a % share of all
-7,843 points, live distance to the nearest SEPA PVA zone (geopandas,
-computed on the fly against the same 7-zone Glasgow subset used for the
-flood_risk label), and two cards computed from the loaded feature matrix
-(data-vintage note; winter vs. annual rainfall). Identical to Version B's
-Overview tab addition, kept here too since it's general location context,
-not SHAP-dependent.
-"""
 
 import math
 from urllib.parse import quote
