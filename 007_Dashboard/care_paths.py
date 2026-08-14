@@ -1,11 +1,4 @@
-"""Shared runtime path configuration for the CARE dashboards.
 
-care_dashboard_versionA.py and care_dashboard_versionB.py both need the same
-three files (feature matrix, trained model, SEPA PVA boundaries). Resolving
-them relative to the repository root here means the dashboards run
-unmodified after a fresh `git clone`, with no personal filesystem paths to
-edit.
-"""
 
 from pathlib import Path
 
