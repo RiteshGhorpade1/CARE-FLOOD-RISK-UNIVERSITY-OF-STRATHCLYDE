@@ -1,20 +1,4 @@
-"""
-Step 3 — adds the 39-year rainfall climatology and live model inference.
 
-Loads feature_matrix_40yr.csv (1987-2025 rainfall aggregates, replacing the
-original 3-year window) and the retrained rf_model_40yr.joblib. The risk map
-and side panel now show the model's live prediction for each point rather
-than the precomputed flood_risk label. This build history is superseded by
-care_dashboard_versionA.py / versionB.py, the final usability-study versions,
-which is where the SHAP explanation panel actually landed.
-
-Also adds postcode search: type a UK postcode, geocode it via the free
-postcodes.io API, and jump to + highlight the nearest grid point.
-
-Build-history file, kept for provenance only — DATA_PATH/MODEL_PATH below
-still use the author's original absolute filesystem path and will not run
-unmodified on another machine.
-"""
 
 import math
 from urllib.parse import quote
